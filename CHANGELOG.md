@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 — 2026-10-02
+
+- Added TypeScript declarations (`lib/jops-core.d.ts`) with JSDoc for all public exports: `View`, `Router`, `Store`, `EventBus`, `layout`, `raw`. Added `"types"` field to `package.json`.
+- Updated CDN examples to jsDelivr (`@latest`) in README and landing page.
+- MIT license.
+
 ## 1.0.2 — 2026-10-02
 
 - Patch release.

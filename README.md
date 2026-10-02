@@ -11,13 +11,13 @@ No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
 ## Where JOPS Fits
 
 |           | No Bundler    | OOP Classes | Declarative View Nesting | No Element Registration |
-| --------- | ------------- | ----------- | ------------------------ | ----------------------- |
-| **JOPS**  | ✅            | ✅          | ✅                       | ✅                      |
-| Lit       | ✅            | ✅          | ⚠️ Web Components only   | ❌                      |
-| Stimulus  | ✅            | ✅          | ❌                       | ✅                      |
-| Alpine.js | ✅            | ❌          | ❌                       | ✅                      |
-| Angular   | ❌            | ✅          | ✅                       | ✅                      |
-| Svelte    | ❌ (compiler) | ✅          | ✅                       | ✅                      |
+| --------- | ------------- | ----------- | ------------------------ | ------------------------------ |
+| **JOPS**  | ✅            | ✅          | ✅                       | ✅                             |
+| Lit       | ✅            | ✅          | ⚠️ Web Components only   | ❌                             |
+| Stimulus  | ✅            | ✅          | ❌                       | ✅                             |
+| Alpine.js | ✅            | ❌          | ❌                       | ✅                             |
+| Angular   | ❌            | ✅          | ✅                       | ✅                             |
+| Svelte    | ❌ (compiler) | ✅          | ✅                       | ✅                             |
 
 **Target audience:** Teams building internal tools, dashboards, embedded WebViews, or native mobile hybrid apps who want a structured, class-based frontend architecture without the npm/webpack/babel ecosystem overhead.
 
@@ -31,16 +31,13 @@ The fastest way to get started. Add these two tags to any HTML page:
 
 ```html
 <script type="importmap">
-  {
-    "imports": {
-      "jops-core": "https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js"
-    }
+{
+  "imports": {
+    "jops-core": "https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js"
   }
+}
 </script>
-<script
-  src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js"
-  data-app="/src/App.js"
-></script>
+<script src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js" data-app="/src/App.js"></script>
 ```
 
 The import map lets your app modules use `import { View } from "jops-core"`. The script tag bootstraps the app entry point specified in `data-app`.
@@ -165,7 +162,7 @@ XSS-safe tagged template literal for defining HTML layouts. Dynamic values are H
 ```js
 import { layout, raw } from "jops-core";
 
-const html = layout`<p>${userInput}</p>`; // escaped
+const html = layout`<p>${userInput}</p>`;             // escaped
 const html = layout`<p>${raw("<b>trusted</b>")}</p>`; // raw HTML
 ```
 
