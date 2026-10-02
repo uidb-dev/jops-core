@@ -44,7 +44,15 @@ The import map lets your app modules use `import { View } from "jops-core"`. The
 
 `App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it.
 
-Replace `@latest` with a specific version (e.g. `@1.0.2`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.0.3`) to pin. No build step, no npm, no bundler.
+
+For editor autocomplete and inline docs without installing the full package, add jops-core as a dev dependency:
+
+```bash
+npm i -D jops-core
+```
+
+Your editor picks up `lib/jops-core.d.ts` automatically via the `"types"` field in `package.json`.
 
 ### npm
 
@@ -295,3 +303,19 @@ EventBus.unsubscribe("user:login", handler);
 | --------------------- | -------------------------------------------------------------------------- |
 | `npx jops-core init`  | Vendor library, configure `index.html`, inject scripts into `package.json` |
 | `npx jops-core build` | Generate production-ready `dist/` folder                                   |
+
+---
+
+## Source & Contributing
+
+JOPS is distributed as a single minified ES module (`lib/jops-core.min.js`) together with full TypeScript declarations (`lib/jops-core.d.ts`). The source repository is private.
+
+This is a deliberate choice. JOPS is maintained by one developer at [UIDB](https://ui-db.com), and keeping the codebase in one pair of hands keeps it small, consistent, and fast to change.
+
+What that means for you:
+
+- **Free to use.** JOPS is MIT-licensed. Use it in personal, commercial, and client projects.
+- **The API is the contract.** Every public class, method, and lifecycle hook is documented in this README and typed in `jops-core.d.ts`, so your editor gives you autocomplete and inline docs.
+- **Readable stack traces.** The build keeps class and function names (`--keep-names`), so errors point to `View.loadLayout`, not `e.t`.
+- **Backwards compatible within a major version.** Pin `jops-core@1` if you want to control major upgrades.
+- **Feedback goes through issues.** Bug reports and feature requests are welcome in [GitHub Issues](https://github.com/uidb-dev/jops-core/issues), and questions in [Discussions](https://github.com/uidb-dev/jops-core/discussions). The repository doesn't accept pull requests; describe the change in an issue instead.

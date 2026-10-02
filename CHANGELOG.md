@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4 — 2026-10-02
+
+- README: added `npm i -D jops-core` note for CDN users to get editor autocomplete via `lib/jops-core.d.ts`.
+
 ## 1.0.3 — 2026-10-02
 
 - Added TypeScript declarations (`lib/jops-core.d.ts`) with JSDoc for all public exports: `View`, `Router`, `Store`, `EventBus`, `layout`, `raw`. Added `"types"` field to `package.json`.
