@@ -1,0 +1,51 @@
+<svg viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg" font-family="monospace">
+  <rect width="400" height="340" fill="#0f1117"/>
+
+  <text x="200" y="30" text-anchor="middle" fill="#7c8cf8" font-size="13" font-weight="bold" letter-spacing="2">VIEW LIFECYCLE</text>
+
+  <!-- Flow boxes -->
+  <!-- loadLayout -->
+  <rect x="130" y="50" width="140" height="38" rx="6" fill="#1e2235" stroke="#7c8cf8" stroke-width="1.5"/>
+  <text x="200" y="68" text-anchor="middle" fill="#7c8cf8" font-size="11">loadLayout()</text>
+  <text x="200" y="81" text-anchor="middle" fill="#3d4466" font-size="9">fetch layout module</text>
+
+  <line x1="200" y1="88" x2="200" y2="106" stroke="#3d4466" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- inflate -->
+  <rect x="130" y="106" width="140" height="38" rx="6" fill="#1e2235" stroke="#56cfb2" stroke-width="1.5"/>
+  <text x="200" y="124" text-anchor="middle" fill="#56cfb2" font-size="11">inflate()</text>
+  <text x="200" y="137" text-anchor="middle" fill="#3d4466" font-size="9">layout string → domNode</text>
+
+  <line x1="200" y1="144" x2="200" y2="162" stroke="#3d4466" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- onLayout -->
+  <rect x="130" y="162" width="140" height="38" rx="6" fill="#1e2235" stroke="#56cfb2" stroke-width="1.5"/>
+  <text x="200" y="180" text-anchor="middle" fill="#56cfb2" font-size="11">onLayout()</text>
+  <text x="200" y="193" text-anchor="middle" fill="#3d4466" font-size="9">DOM ready, add subviews</text>
+
+  <line x1="200" y1="200" x2="200" y2="218" stroke="#3d4466" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- onResume -->
+  <rect x="130" y="218" width="140" height="38" rx="6" fill="#1e2235" stroke="#f0a040" stroke-width="1.5"/>
+  <text x="200" y="236" text-anchor="middle" fill="#f0a040" font-size="11">onResume()</text>
+  <text x="200" y="249" text-anchor="middle" fill="#3d4466" font-size="9">view visible, read Store</text>
+
+  <line x1="200" y1="256" x2="200" y2="274" stroke="#3d4466" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- bindEvents -->
+  <rect x="130" y="274" width="140" height="38" rx="6" fill="#1e2235" stroke="#f0a040" stroke-width="1.5"/>
+  <text x="200" y="292" text-anchor="middle" fill="#f0a040" font-size="11">bindEvents()</text>
+  <text x="200" y="305" text-anchor="middle" fill="#3d4466" font-size="9">wire on* handlers</text>
+
+  <!-- onResume loop arrow -->
+  <path d="M 270 237 Q 340 237 340 275 Q 340 311 270 311" stroke="#f06292" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>
+  <text x="345" y="278" fill="#f06292" font-size="9" text-anchor="middle">back()</text>
+  <text x="345" y="290" fill="#f06292" font-size="9" text-anchor="middle">/ resume</text>
+
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#3d4466"/>
+    </marker>
+  </defs>
+</svg>

@@ -1,0 +1,57 @@
+<svg viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" font-family="monospace">
+  <rect width="400" height="320" fill="#0f1117"/>
+
+  <!-- Title -->
+  <text x="200" y="30" text-anchor="middle" fill="#7c8cf8" font-size="13" font-weight="bold" letter-spacing="2">VIEW HIERARCHY</text>
+
+  <!-- Root node -->
+  <rect x="150" y="50" width="100" height="36" rx="6" fill="#1e2235" stroke="#7c8cf8" stroke-width="1.5"/>
+  <text x="200" y="73" text-anchor="middle" fill="#7c8cf8" font-size="12">App</text>
+
+  <!-- Lines to level 2 -->
+  <line x1="200" y1="86" x2="100" y2="120" stroke="#3d4466" stroke-width="1.2"/>
+  <line x1="200" y1="86" x2="200" y2="120" stroke="#3d4466" stroke-width="1.2"/>
+  <line x1="200" y1="86" x2="300" y2="120" stroke="#3d4466" stroke-width="1.2"/>
+
+  <!-- Level 2 nodes -->
+  <rect x="50" y="120" width="100" height="36" rx="6" fill="#1e2235" stroke="#56cfb2" stroke-width="1.5"/>
+  <text x="100" y="143" text-anchor="middle" fill="#56cfb2" font-size="12">Router</text>
+
+  <rect x="150" y="120" width="100" height="36" rx="6" fill="#1e2235" stroke="#56cfb2" stroke-width="1.5"/>
+  <text x="200" y="143" text-anchor="middle" fill="#56cfb2" font-size="12">Header</text>
+
+  <rect x="250" y="120" width="100" height="36" rx="6" fill="#1e2235" stroke="#56cfb2" stroke-width="1.5"/>
+  <text x="300" y="143" text-anchor="middle" fill="#56cfb2" font-size="12">Footer</text>
+
+  <!-- Lines to level 3 (from Router) -->
+  <line x1="100" y1="156" x2="60" y2="192" stroke="#3d4466" stroke-width="1.2"/>
+  <line x1="100" y1="156" x2="140" y2="192" stroke="#3d4466" stroke-width="1.2"/>
+
+  <!-- Level 3 nodes -->
+  <rect x="20" y="192" width="80" height="36" rx="6" fill="#1e2235" stroke="#f0a040" stroke-width="1.5"/>
+  <text x="60" y="215" text-anchor="middle" fill="#f0a040" font-size="11">HomeView</text>
+
+  <rect x="110" y="192" width="80" height="36" rx="6" fill="#1e2235" stroke="#f0a040" stroke-width="1.5"/>
+  <text x="150" y="215" text-anchor="middle" fill="#f0a040" font-size="11">FormView</text>
+
+  <!-- Lines to level 4 -->
+  <line x1="150" y1="228" x2="130" y2="262" stroke="#3d4466" stroke-width="1.2"/>
+  <line x1="150" y1="228" x2="170" y2="262" stroke="#3d4466" stroke-width="1.2"/>
+
+  <!-- Level 4 nodes -->
+  <rect x="100" y="262" width="60" height="30" rx="5" fill="#1e2235" stroke="#f06292" stroke-width="1.5"/>
+  <text x="130" y="282" text-anchor="middle" fill="#f06292" font-size="10">Card</text>
+
+  <rect x="170" y="262" width="60" height="30" rx="5" fill="#1e2235" stroke="#f06292" stroke-width="1.5"/>
+  <text x="200" y="282" text-anchor="middle" fill="#f06292" font-size="10">Card</text>
+
+  <!-- Legend -->
+  <rect x="270" y="200" width="10" height="10" rx="2" fill="#7c8cf8"/>
+  <text x="285" y="210" fill="#5a6080" font-size="10">App root</text>
+  <rect x="270" y="218" width="10" height="10" rx="2" fill="#56cfb2"/>
+  <text x="285" y="228" fill="#5a6080" font-size="10">View</text>
+  <rect x="270" y="236" width="10" height="10" rx="2" fill="#f0a040"/>
+  <text x="285" y="246" fill="#5a6080" font-size="10">Route</text>
+  <rect x="270" y="254" width="10" height="10" rx="2" fill="#f06292"/>
+  <text x="285" y="264" fill="#5a6080" font-size="10">SubView</text>
+</svg>

@@ -1,0 +1,44 @@
+import { layout } from "jops-core";
+
+export default layout`
+<section id="form" class="form-section">
+    <h2 class="section__title">Sample Form</h2>
+    <form class="form" type="jops-event-bind" onsubmit="onSubmit">
+        <div class="form__group">
+            <label class="form__label" for="fullname">Full Name</label>
+            <input class="form__input" type="text" id="fullname" name="fullname" placeholder="Enter your full name">
+        </div>
+        <div class="form__group">
+            <label class="form__label" for="email">Email</label>
+            <input class="form__input" type="email" id="email" name="email" placeholder="Enter your email">
+        </div>
+        <div class="form__group">
+            <label class="form__label" for="role">Role</label>
+            <select class="form__select" id="role" name="role">
+                <option value="">Select a role</option>
+                <option value="frontend">Frontend Developer</option>
+                <option value="backend">Backend Developer</option>
+                <option value="fullstack">Full Stack Developer</option>
+                <option value="mobile">Mobile Developer</option>
+            </select>
+        </div>
+        <div class="form__group">
+            <label class="form__label">Experience</label>
+            <div class="form__radio-group">
+                <label class="form__radio-label"><input type="radio" name="experience" value="junior"> Junior</label>
+                <label class="form__radio-label"><input type="radio" name="experience" value="mid"> Mid</label>
+                <label class="form__radio-label"><input type="radio" name="experience" value="senior"> Senior</label>
+            </div>
+        </div>
+        <div class="form__group">
+            <label class="form__label" for="message">Message</label>
+            <textarea class="form__textarea" id="message" name="message" rows="4" placeholder="Write your message here..."></textarea>
+        </div>
+        <div class="form__group form__group--inline">
+            <input class="form__checkbox" type="checkbox" id="agree" name="agree" value="yes">
+            <label class="form__label form__label--inline" for="agree">I agree to the terms and conditions</label>
+        </div>
+        <button class="btn btn--primary" type="submit">Submit</button>
+    </form>
+</section>
+`;

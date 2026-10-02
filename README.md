@@ -1,0 +1,297 @@
+# JOPS — JavaScript OOP SPA Framework
+
+A no-bundler, vanilla-JavaScript SPA framework for developers who think in OOP and native-mobile patterns.
+
+## What is JOPS?
+
+JOPS is a lightweight SPA framework built on native ES6 modules. It discards the complexity of modern build toolchains while keeping a structured, class-based architecture inspired by Android's view and lifecycle model.
+
+No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
+
+## Where JOPS Fits
+
+|           | No Bundler    | OOP Classes | Declarative View Nesting | No Element Registration |
+| --------- | ------------- | ----------- | ------------------------ | ------------------------------ |
+| **JOPS**  | ✅            | ✅          | ✅                       | ✅                             |
+| Lit       | ✅            | ✅          | ⚠️ Web Components only   | ❌                             |
+| Stimulus  | ✅            | ✅          | ❌                       | ✅                             |
+| Alpine.js | ✅            | ❌          | ❌                       | ✅                             |
+| Angular   | ❌            | ✅          | ✅                       | ✅                             |
+| Svelte    | ❌ (compiler) | ✅          | ✅                       | ✅                             |
+
+**Target audience:** Teams building internal tools, dashboards, embedded WebViews, or native mobile hybrid apps who want a structured, class-based frontend architecture without the npm/webpack/babel ecosystem overhead.
+
+---
+
+## Installation
+
+### CDN
+
+The fastest way to get started. Add these two tags to any HTML page:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "jops-core": "https://cdn.ui-db.com/jops-core/1.0.0/jops-core.min.js"
+  }
+}
+</script>
+<script src="https://cdn.ui-db.com/jops-core/1.0.0/jops-core.min.js" data-app="/src/App.js"></script>
+```
+
+The import map lets your app modules use `import { View } from "jops-core"`. The script tag bootstraps the app entry point specified in `data-app`.
+
+`App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it.
+
+Replace `1.0.0` with the version you want to pin. No build step, no npm, no bundler.
+
+### npm
+
+For greenfield projects that want local tooling and scaffolding:
+
+```bash
+npm init -y
+npm install jops-core
+npx jops-core init
+```
+
+`npx jops-core init` vendors the library to `/lib/jops-core.min.js`, configures `index.html` with the import map, and injects build and postinstall scripts into `package.json`.
+
+### Build for production
+
+```bash
+npm run build
+```
+
+Generates a clean `dist/` folder ready to serve.
+
+### VS Code — HTML highlighting in layout templates
+
+Install the [lit-html](https://marketplace.visualstudio.com/items?itemName=bierner.lit-html) extension, then add this to your `.vscode/settings.json`:
+
+```json
+{
+  "lit-html.tags": ["layout"],
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+      {
+        "scope": "invalid.illegal.unrecognized-tag.html",
+        "settings": { "foreground": "#569CD6" }
+      }
+    ]
+  }
+}
+```
+
+This gives you HTML syntax highlighting, Emmet, and autocomplete inside every `` layout`...` `` tagged template. Custom view tags (e.g. `<MyView>`) are coloured blue like standard HTML elements instead of red. `npx jops-core init` configures this automatically.
+
+---
+
+## Class Reference
+
+### `View` — Base Class
+
+The foundational building block. Every screen, component, and sub-component extends `View`.
+
+```js
+import { View } from "jops-core";
+
+export default class MyView extends View { ... }
+```
+
+#### Lifecycle (called by the framework in order)
+
+| Method                    | When called                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `async loadLayout(path?)` | Override to load a layout `.js` module                                         |
+| `inflate()`               | Converts `this.layout` string into `this.domNode`                              |
+| `async onLayout()`        | DOM is live — add subviews, read initial data                                  |
+| `async onResume()`        | View becomes visible — called on first display and on every return navigation  |
+| `bindEvents()`            | Wires `on*` attributes on `[type="jops-event-bind"]` elements to class methods |
+| `onBackPressed()`         | Called by Router when back navigation is detected on this view                 |
+
+#### Instance Methods
+
+| Method                          | Description                                                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `get(id)`                       | Returns an `Element` wrapper for the child with the given DOM `id`                                             |
+| `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped                                          |
+| `addSubView(containerId, view)` | Appends `view` into the child element with `id="containerId"`, runs its full lifecycle                         |
+| `insertSubView(view, index)`    | Inserts `view` at position `index` within `this.domNode`, runs its full lifecycle                              |
+| `removeSubView(view)`           | Removes `view` from DOM and `this.subViews`, calls `view.destroy()`                                            |
+| `find(condition)`               | Depth-first search across full subview subtree; returns flat array of all views matching the predicate         |
+| `show()`                        | Restores `this.domNode` display (removes inline `display` override)                                            |
+| `hide()`                        | Sets `this.domNode` to `display: none`                                                                         |
+| `destroy()`                     | Recursively destroys subtree — calls `destroy()` on all subviews, removes `domNode` from DOM, nulls references |
+
+#### Declarative Event Binding
+
+Mark any element with `type="jops-event-bind"` and add `on*` attributes whose values are method names on the View class:
+
+```html
+<button type="jops-event-bind" onclick="onSave">Save</button>
+```
+
+```js
+onSave(event) { ... }
+```
+
+---
+
+### `Element` — DOM Accessor (returned by `View.get()`)
+
+Returned by `view.get(id)`. Wraps a single DOM element for reading and writing.
+
+| Method       | Description                                                          |
+| ------------ | -------------------------------------------------------------------- |
+| `set(value)` | Sets `innerHTML` of the element — accepts plain text or HTML strings |
+| `value()`    | Returns the current `innerHTML` of the element                       |
+
+```js
+this.get("username").set("Alice");
+const current = this.get("username").value();
+```
+
+---
+
+### `layout` — Tagged Template Function
+
+XSS-safe tagged template literal for defining HTML layouts. Dynamic values are HTML-escaped automatically. Use `raw()` to opt out for trusted HTML.
+
+```js
+import { layout, raw } from "jops-core";
+
+const html = layout`<p>${userInput}</p>`;             // escaped
+const html = layout`<p>${raw("<b>trusted</b>")}</p>`; // raw HTML
+```
+
+---
+
+### `raw(html)` — Function
+
+Wraps a trusted HTML string to bypass escaping inside a `layout` template.
+
+```js
+import { raw } from "jops-core";
+
+raw("<b>Hello</b>"); // passed through as-is inside layout``
+```
+
+---
+
+### `Router` — extends `View`
+
+Hash-based SPA router. Singleton. Declared in the layout as `<Router type="jops" animation="slide">`.
+
+#### Two Navigation Paradigms
+
+| Pattern                  | Mechanism          | Instance             | Android analogy                 |
+| ------------------------ | ------------------ | -------------------- | ------------------------------- |
+| `href="#path"`           | flat, hashchange   | pre-existing, reused | Tab navigation                  |
+| `navigate(path, Class?)` | hierarchical stack | always new instance  | `startActivity()`               |
+| `replace(path, Class?)`  | resets stack       | existing or new      | `startActivity(FLAG_CLEAR_TOP)` |
+
+#### Static Methods
+
+| Method               | Description                        |
+| -------------------- | ---------------------------------- |
+| `Router.singleton()` | Returns the single Router instance |
+
+#### Instance Methods
+
+| Method                      | Description                                                                                                                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `navigate(path, ClassDef?)` | Creates a new view instance for `path`, pushes onto the nav stack, animates forward. Updates address bar to `#path?params`. `ClassDef` required for dynamic routes not in the static route map |
+| `back()`                    | Navigates back — pops the nav stack with animation if non-empty, otherwise calls `history.back()`                                                                                              |
+| `replace(path, ClassDef?)`  | Clears the nav stack and navigates to `path`. Uses existing flat route instance if available, otherwise creates a new one from `ClassDef`                                                      |
+| `getParams()`               | Returns the current URL query params as a plain object. Works for both static (`href="#path?k=v"`) and dynamic (`navigate("/path?k=v")`) routes                                                |
+
+#### Animation
+
+Set via the `animation` attribute on the `<Router>` element:
+
+| Value              | Behaviour                                                                  |
+| ------------------ | -------------------------------------------------------------------------- |
+| `"none"` (default) | Instant switch, no animation                                               |
+| `"slide"`          | Forward: incoming slides in from right. Back: outgoing slides out to right |
+| `"fade"`           | Crossfade between outgoing and incoming                                    |
+
+Animation only occurs on `navigate()` (forward) and `back()` when the nav stack is non-empty. Flat tab switching is always instant.
+
+#### Layout Declaration
+
+```html
+<Router type="jops" animation="slide">
+  <view type="jops" src="/src/Home.js" path="/home"></view>
+  <view type="jops" src="/src/Form.js" path="/form"></view>
+</Router>
+```
+
+#### Query Params
+
+```js
+// static route with params
+<a href="#form?tab=profile">Profile</a>;
+
+// dynamic navigation with params
+Router.singleton().navigate("/detail?id=42&mode=edit", DetailView);
+
+// read params in any view's onResume()
+const { id, mode } = Router.singleton().getParams();
+```
+
+---
+
+### `Store` — Singleton State Container
+
+App-wide runtime state. No reactivity — a plain shared key-value store with dot-notation path access. Views read from Store in `onResume()` and write in event handlers.
+
+```js
+import { Store } from "jops-core";
+
+const store = Store.singleton();
+```
+
+| Method              | Description                                                            |
+| ------------------- | ---------------------------------------------------------------------- |
+| `Store.singleton()` | Returns the single Store instance, creating it on first call           |
+| `get(path)`         | Reads a value by dot-notation path, e.g. `"user.name"`                 |
+| `set(path, value)`  | Writes a value by dot-notation path; auto-creates intermediate objects |
+| `clear()`           | Resets the entire state to `{}`                                        |
+
+```js
+Store.singleton().set("user.name", "Alice");
+Store.singleton().get("user.name"); // "Alice"
+Store.singleton().set("cart.items", [1, 2, 3]);
+Store.singleton().clear();
+```
+
+---
+
+### `EventBus` — Static Pub/Sub
+
+Stateless cross-view event broadcasting. All methods are static — no instance needed.
+
+| Method                                  | Description                                                            |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| `EventBus.subscribe(event, callback)`   | Registers a listener for the named event                               |
+| `EventBus.send(event, data?)`           | Fires the named event to all subscribers with an optional data payload |
+| `EventBus.unsubscribe(event, callback)` | Removes a specific listener by reference                               |
+
+```js
+import { EventBus } from "jops-core";
+
+EventBus.subscribe("user:login", (data) => console.log(data.name));
+EventBus.send("user:login", { name: "Alice" });
+EventBus.unsubscribe("user:login", handler);
+```
+
+---
+
+## CLI
+
+| Command               | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `npx jops-core init`  | Vendor library, configure `index.html`, inject scripts into `package.json` |
+| `npx jops-core build` | Generate production-ready `dist/` folder                                   |

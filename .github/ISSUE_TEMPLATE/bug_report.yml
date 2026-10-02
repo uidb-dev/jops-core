@@ -1,0 +1,26 @@
+name: Bug report
+description: Something in JOPS isn't working
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes: { label: JOPS version, placeholder: "1.0.1" }
+    validations: { required: true }
+  - type: dropdown
+    id: install
+    attributes: { label: Installed via, options: [npm, CDN] }
+    validations: { required: true }
+  - type: input
+    id: browser
+    attributes: { label: Browser / WebView and version }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal code, ideally starting from templates/hello-world
+      render: js
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected vs actual behavior }
+    validations: { required: true }
