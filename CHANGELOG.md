@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.6 — 2026-10-05
+
+- Added `Thread` class: extend and override `run(params)` and `onMessage(event)` to run work on a Web Worker. `start(params)` spawns the worker; `terminate()` stops it.
+- Added `npx jops-core update` command: copies the latest `lib/jops-core.min.js` from `node_modules` into the project's `lib/` folder without re-running full init.
+- README: `Thread` class reference, `ThreadPool` future note, updating workflow docs.
+
 ## 1.0.5 — 2026-10-04
 
 - Fixed CDN loading: bootstrap now uses `document.querySelector("script[data-app]")` instead of `document.currentScript` (which is always `null` in a module script).

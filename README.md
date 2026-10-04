@@ -299,12 +299,60 @@ EventBus.unsubscribe("user:login", handler);
 
 ---
 
+### `Thread` — Web Worker Base Class
+
+Base class for running CPU-bound work on a background thread. Extend and override `run()` and `onMessage()`.
+
+| Method              | Description                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| `start(params?)`    | Spawns a Web Worker, runs `run(params)` on it, and wires `onMessage` for results                 |
+| `run(params)`       | Override to define the work. Runs inside the Worker — self-contained, no outer scope access      |
+| `onMessage(event)`  | Override to handle results posted back from the worker via `self.postMessage()`                  |
+| `terminate()`       | Terminates the worker immediately and clears the internal reference                              |
+
+```js
+import { Thread } from "jops-core";
+
+class HashThread extends Thread {
+  run(params) {
+    // runs on a background thread — no access to the main thread or class instance
+    let hash = 0;
+    for (let i = 0; i < params.data.length; i++) hash ^= params.data.charCodeAt(i);
+    self.postMessage(hash);
+  }
+  onMessage(event) {
+    console.log("Hash result:", event.data);
+  }
+}
+
+const t = new HashThread();
+t.start({ data: "hello world" });
+// later:
+t.terminate();
+```
+
+> **Note:** Each `Thread` instance spawns one OS thread. Avoid running more concurrent threads than the device has logical CPU cores — excess threads add context-switching overhead with no throughput gain. Check `navigator.hardwareConcurrency` for the core count. A `ThreadPool` class that manages a fixed worker pool automatically is planned for a future JOPS release.
+
+---
+
 ## CLI
 
-| Command               | Description                                                                |
-| --------------------- | -------------------------------------------------------------------------- |
-| `npx jops-core init`  | Vendor library, configure `index.html`, inject scripts into `package.json` |
-| `npx jops-core build` | Generate production-ready `dist/` folder                                   |
+| Command                | Description                                                                |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json` |
+| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/`          |
+| `npx jops-core build`  | Generate production-ready `dist/` folder                                   |
+
+### Updating the library
+
+When a new version of JOPS is released, run both commands:
+
+```bash
+npm i jops-core@latest
+npx jops-core update
+```
+
+`npm i` updates `node_modules`; `npx jops-core update` copies the new `lib/jops-core.min.js` into your project so the browser picks it up. Running `update` without `npm i` first has no effect — it copies whatever version is already in `node_modules`.
 
 ---
 

@@ -288,4 +288,49 @@ export declare class Router extends View {
      */
     replace(path: string, ClassDef?: typeof View): Promise<void>;
 }
+/**
+ * Base class for running work on a Web Worker (background thread).
+ * Extend and override {@link Thread#run} and {@link Thread#onMessage}.
+ *
+ * @example
+ * class MyThread extends Thread {
+ *   run(params) {
+ *     const result = params.a + params.b;
+ *     self.postMessage(result);
+ *   }
+ *   onMessage(event) {
+ *     console.log("result:", event.data);
+ *   }
+ * }
+ * const t = new MyThread();
+ * t.start({ a: 1, b: 2 });
+ * // later:
+ * t.terminate();
+ */
+export declare class Thread {
+    #private;
+    /**
+     * Override to define the work the thread performs.
+     * Runs inside a Web Worker — must be self-contained (no access to outer scope or class instance).
+     * Call `self.postMessage(result)` to send a result back to the main thread.
+     * @param {*} params - The value passed to {@link Thread#start}.
+     */
+    run(params: any): void;
+    /**
+     * Override to handle messages posted back from the worker via `self.postMessage()`.
+     * @param {MessageEvent} event
+     */
+    onMessage(event: MessageEvent): void;
+    /**
+     * Spawns the Web Worker, serializes {@link Thread#run}, and passes `params` as the initial input.
+     * @param {*} [params] - Optional data forwarded to `run(params)` inside the worker.
+     */
+    start(params?: any): void;
+    /**
+     * Terminates the Web Worker immediately and clears the internal reference.
+     * Safe to call even if the worker has already finished.
+     * After terminating, `start()` can be called again to spawn a new worker.
+     */
+    terminate(): void;
+}
 export {};
