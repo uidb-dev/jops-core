@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.7 — 2026-10-05
+
+- Fixed `Thread.start()`: class method shorthand (`run() {}`) was serialized into an invalid worker blob. Now correctly wrapped as a function expression.
+
 ## 1.0.6 — 2026-10-05
 
 - Added `Thread` class: extend and override `run(params)` and `onMessage(event)` to run work on a Web Worker. `start(params)` spawns the worker; `terminate()` stops it.
