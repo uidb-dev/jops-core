@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 — 2026-10-04
+
+- Fixed CDN loading: bootstrap now uses `document.querySelector("script[data-app]")` instead of `document.currentScript` (which is always `null` in a module script).
+- Fixed CDN loading: all dynamic `import()` calls for user-supplied paths now resolve against `document.baseURI` via `new URL(path, document.baseURI).href`, so layouts and view modules no longer 404 when the library is served from a different origin (e.g. jsDelivr).
+- README CDN snippet updated: added `type="module"` to the script tag, changed `data-app` to a relative path (`./src/App.js`), added HTTP server note.
+
 ## 1.0.4 — 2026-10-02
 
 - README: added `npm i -D jops-core` note for CDN users to get editor autocomplete via `lib/jops-core.d.ts`.

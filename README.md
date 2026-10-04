@@ -37,14 +37,16 @@ The fastest way to get started. Add these two tags to any HTML page:
   }
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js" data-app="/src/App.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js" data-app="./src/App.js"></script>
 ```
 
-The import map lets your app modules use `import { View } from "jops-core"`. The script tag bootstraps the app entry point specified in `data-app`.
+The import map lets your app modules use `import { View } from "jops-core"`. The module script tag bootstraps the app entry point specified in `data-app`.
 
 `App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it.
 
-Replace `@latest` with a specific version (e.g. `@1.0.3`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.0.4`) to pin. No build step, no npm, no bundler.
+
+> **Note:** ES modules require an HTTP server — open your project with `npx serve` (or any static server) rather than double-clicking `index.html`. Browsers block `import` on `file://` URLs.
 
 For editor autocomplete and inline docs without installing the full package, add jops-core as a dev dependency:
 
