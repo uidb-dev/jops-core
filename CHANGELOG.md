@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.8 — 2026-10-05
+
+- README: moved "Updating the library" section to follow the npm installation section for better documentation flow.
+
 ## 1.0.7 — 2026-10-05
 
 - Fixed `Thread.start()`: class method shorthand (`run() {}`) was serialized into an invalid worker blob. Now correctly wrapped as a function expression.

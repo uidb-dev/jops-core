@@ -68,6 +68,17 @@ npx jops-core init
 
 `npx jops-core init` vendors the library to `/lib/jops-core.min.js`, configures `index.html` with the import map, and injects build and postinstall scripts into `package.json`.
 
+### Updating the library
+
+When a new version of JOPS is released, run both commands:
+
+```bash
+npm i jops-core@latest
+npx jops-core update
+```
+
+`npm i` updates `node_modules`; `npx jops-core update` copies the new `lib/jops-core.min.js` into your project so the browser picks it up. Running `update` without `npm i` first has no effect — it copies whatever version is already in `node_modules`.
+
 ### Build for production
 
 ```bash
@@ -342,17 +353,6 @@ t.terminate();
 | `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json` |
 | `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/`          |
 | `npx jops-core build`  | Generate production-ready `dist/` folder                                   |
-
-### Updating the library
-
-When a new version of JOPS is released, run both commands:
-
-```bash
-npm i jops-core@latest
-npx jops-core update
-```
-
-`npm i` updates `node_modules`; `npx jops-core update` copies the new `lib/jops-core.min.js` into your project so the browser picks it up. Running `update` without `npm i` first has no effect — it copies whatever version is already in `node_modules`.
 
 ---
 
