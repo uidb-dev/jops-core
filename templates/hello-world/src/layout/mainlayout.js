@@ -5,27 +5,27 @@ export default layout`
 
 <div class="jops-root">
 
-    <View type="jops" layout="/src/layout/layout_header.js"></View>
+    <View jops layout="/src/layout/layout_header.js"></View>
 
     <main class="main">
 
-      <Router type="jops" animation="slide">
+      <Router jops animation="slide">
 
-        <View path="/home" type="jops" layout="/src/layout/layout_hero.js"></View>
+        <View path="/home" jops layout="/src/layout/layout_hero.js"></View>
 
-        <Features path="/features" type="jops"
+        <Features path="/features" jops
            src="/src/Features.js">
         </Features>
 
-        <Form path="/form" type="jops"
+        <Form path="/form" jops
            src="/src/Form.js">
         </Form>
 
-        <DataSection path="/data" type="jops"
+        <DataSection path="/data" jops
            src="/src/DataSection.js">
         </DataSection>
 
-        <Media path="/media" type="jops"
+        <Media path="/media" jops
            src="/src/Media.js">
         </Media>
        
@@ -33,7 +33,7 @@ export default layout`
 
     </main>
 
-    <View type="jops" layout="/src/layout/layout_footer.js"></View>
+    <View jops layout="/src/layout/layout_footer.js"></View>
 
 </div>
 `;

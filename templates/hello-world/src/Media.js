@@ -25,7 +25,7 @@ class MediaCard extends View {
     this.imgSrc = imgSrc;
     this.caption = caption;
     this.layout = layout`
-        <div class="media-card" type="jops-event-bind" onclick="showMedia">
+        <div class="media-card" jops-event-bind onclick="showMedia">
           <div id="imgSrc" class="media-card__img-placeholder"></div>
           <p id="caption" class="media-card__caption"></p>
         </div>
@@ -53,7 +53,7 @@ class MediaDialog extends View {
     super();
     this.layout = layout`
       <div class="media-dialog">
-        <button class="media-dialog__back btn btn--secondary" type="jops-event-bind" onclick="onBack">← Back</button>
+        <button class="media-dialog__back btn btn--secondary" jops-event-bind onclick="onBack">← Back</button>
         <div id="dialogImage" class="media-dialog__image"></div>
         <p id="dialogCaption" class="media-dialog__caption"></p>
       </div>

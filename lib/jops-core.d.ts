@@ -92,7 +92,7 @@ export declare class View {
      */
     get(id: string): Element;
     /**
-     * Wires `on*` HTML attributes on `[type="jops-event-bind"]` elements to
+     * Wires `on*` HTML attributes on `[jops-event-bind]` elements to
      * same-named methods on this view instance.
      * Called automatically after `onResume()`. Override to add custom wiring.
      */
@@ -144,7 +144,7 @@ export declare class View {
      */
     insertSubView(view: View, index: number): Promise<void>;
     /**
-     * Mounts the view to the DOM, resolves all nested `[type="jops"]` view
+     * Mounts the view to the DOM, resolves all nested `[jops]` view
      * elements and `<Router>` declarations, and runs each one's full lifecycle.
      * Call once on the root view; nested views are handled automatically.
      * Idempotent — safe to call multiple times.
@@ -218,7 +218,7 @@ export declare class Store {
 }
 /**
  * Hash-based SPA router. Singleton. Extends {@link View}.
- * Declared in a layout string as `<Router type="jops" animation="slide">`.
+ * Declared in a layout string as `<Router jops animation="slide">`.
  *
  * Supports two navigation paradigms:
  * - **Flat** (`href="#path"`) — reuses pre-existing view instances (tab navigation).
@@ -227,9 +227,9 @@ export declare class Store {
  * @example
  * // In a layout file:
  * layout`
- *   <Router type="jops" animation="slide">
- *     <Home   path="/home"  type="jops" src="/src/Home.js"></Home>
- *     <Detail path="/detail" type="jops" src="/src/Detail.js"></Detail>
+ *   <Router jops animation="slide">
+ *     <Home   path="/home"  jops src="/src/Home.js"></Home>
+ *     <Detail path="/detail" jops src="/src/Detail.js"></Detail>
  *   </Router>
  * `
  */

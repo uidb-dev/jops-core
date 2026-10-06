@@ -3,7 +3,7 @@ import { layout } from "jops-core";
 export default layout`
 <section id="form" class="form-section">
     <h2 class="section__title">Sample Form</h2>
-    <form class="form" type="jops-event-bind" onsubmit="onSubmit">
+    <form class="form" jops-event-bind onsubmit="onSubmit">
         <div class="form__group">
             <label class="form__label" for="fullname">Full Name</label>
             <input class="form__input" type="text" id="fullname" name="fullname" placeholder="Enter your full name">

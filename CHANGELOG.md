@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.9 — 2026-10-06
+
+- New attribute syntax: use `jops` and `jops-event-bind` as plain boolean attributes instead of `type="jops"` / `type="jops-event-bind"`. Old syntax still works — fully backwards compatible.
+
 ## 1.0.8 — 2026-10-05
 
 - README: moved "Updating the library" section to follow the npm installation section for better documentation flow.

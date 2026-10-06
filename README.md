@@ -129,7 +129,7 @@ export default class MyView extends View { ... }
 | `inflate()`               | Converts `this.layout` string into `this.domNode`                              |
 | `async onLayout()`        | DOM is live — add subviews, read initial data                                  |
 | `async onResume()`        | View becomes visible — called on first display and on every return navigation  |
-| `bindEvents()`            | Wires `on*` attributes on `[type="jops-event-bind"]` elements to class methods |
+| `bindEvents()`            | Wires `on*` attributes on `[jops-event-bind]` elements to class methods |
 | `onBackPressed()`         | Called by Router when back navigation is detected on this view                 |
 
 #### Instance Methods
@@ -148,10 +148,10 @@ export default class MyView extends View { ... }
 
 #### Declarative Event Binding
 
-Mark any element with `type="jops-event-bind"` and add `on*` attributes whose values are method names on the View class:
+Mark any element with `jops-event-bind` and add `on*` attributes whose values are method names on the View class:
 
 ```html
-<button type="jops-event-bind" onclick="onSave">Save</button>
+<button jops-event-bind onclick="onSave">Save</button>
 ```
 
 ```js
@@ -203,7 +203,7 @@ raw("<b>Hello</b>"); // passed through as-is inside layout``
 
 ### `Router` — extends `View`
 
-Hash-based SPA router. Singleton. Declared in the layout as `<Router type="jops" animation="slide">`.
+Hash-based SPA router. Singleton. Declared in the layout as `<Router jops animation="slide">`.
 
 #### Two Navigation Paradigms
 
@@ -243,11 +243,13 @@ Animation only occurs on `navigate()` (forward) and `back()` when the nav stack 
 #### Layout Declaration
 
 ```html
-<Router type="jops" animation="slide">
-  <view type="jops" src="/src/Home.js" path="/home"></view>
-  <view type="jops" src="/src/Form.js" path="/form"></view>
+<Router jops animation="slide">
+  <view jops src="/src/Home.js" path="/home"></view>
+  <view jops src="/src/Form.js" path="/form"></view>
 </Router>
 ```
+
+> **Note:** The legacy `type="jops"` and `type="jops-event-bind"` syntax is still supported for backwards compatibility.
 
 #### Query Params
 
