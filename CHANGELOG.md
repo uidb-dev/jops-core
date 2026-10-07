@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.10 — 2026-10-07
+
+- README: added "JOPS Demos" section with a link to the Hello World live demo.
+
 ## 1.0.9 — 2026-10-06
 
 - New attribute syntax: use `jops` and `jops-event-bind` as plain boolean attributes instead of `type="jops"` / `type="jops-event-bind"`. Old syntax still works — fully backwards compatible.

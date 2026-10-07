@@ -23,6 +23,14 @@ No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
 
 ---
 
+## JOPS Demos
+
+| Demo | Description |
+| ---- | ----------- |
+| [JOPS Hello World](https://cdn.ui-db.com/hello-world/index.html) | A minimal starter app showing views, layouts, routing, and event binding |
+
+---
+
 ## Installation
 
 ### CDN
