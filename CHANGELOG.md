@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.11 — 2026-10-09
+
+- Router: all route subviews are now initialised as hidden, eliminating the brief flash of non-active views on first render.
+- Router: initial navigation now honours a pre-existing URL hash — loading `index.html#media` routes directly to `/media` instead of always defaulting to the first route.
+- Path normalisation: `isCDN` flag auto-detected at startup; `normalizePath()` ensures `./`-prefixed paths for CDN and `/`-prefixed paths for npm/lib installs, applied at all three dynamic import sites.
+
 ## 1.0.10 — 2026-10-07
 
 - README: added "JOPS Demos" section with a link to the Hello World live demo.
