@@ -133,7 +133,7 @@ export default class MyView extends View { ... }
 
 | Method                    | When called                                                                    |
 | ------------------------- | ------------------------------------------------------------------------------ |
-| `async loadLayout(path?)` | Override to load a layout `.js` module                                         |
+| `async loadLayout(path?)` | Override to load a layout `.js` module or `.html` file                         |
 | `inflate()`               | Converts `this.layout` string into `this.domNode`                              |
 | `async onLayout()`        | DOM is live — add subviews, read initial data                                  |
 | `async onResume()`        | View becomes visible — called on first display and on every return navigation  |
@@ -194,6 +194,39 @@ import { layout, raw } from "jops-core";
 const html = layout`<p>${userInput}</p>`;             // escaped
 const html = layout`<p>${raw("<b>trusted</b>")}</p>`; // raw HTML
 ```
+
+---
+
+### HTML file layouts
+
+In addition to `.js` layout modules, `loadLayout()` accepts a path to a plain `.html` file. The framework fetches the file, caches it for the lifetime of the page, and assigns its contents as the view's layout — no import, no export, no tagged template required.
+
+**Via `layout` attribute (declarative):**
+```html
+<View jops layout="/src/layout/mainlayout.html"></View>
+```
+
+**Via `loadLayout()` (programmatic):**
+```js
+await root.loadLayout("/src/layout/mainlayout.html");
+root.render();
+```
+
+`mainlayout.html` is a plain HTML fragment:
+
+```html
+<div class="jops-root">
+  <View jops layout="/src/layout/layout_header.html"></View>
+  <main>
+    <Router jops animation="slide">
+      <View path="/home" jops layout="/src/layout/layout_home.html"></View>
+      <MyView path="/detail" jops src="/src/MyView.js"></MyView>
+    </Router>
+  </main>
+</div>
+```
+
+> **Note:** `.html` layouts are fetched at runtime and cached in memory — identical dedup behaviour to the browser's module cache for `.js` layouts. Each unique path is fetched once per page load.
 
 ---
 

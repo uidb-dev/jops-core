@@ -6,7 +6,7 @@ export default class DataSection extends View {
   }
 
   async loadLayout() {
-    await super.loadLayout("/src/layout/layout_data.js");
+    await super.loadLayout("/src/layout/layout_data.html");
   }
 
   async onLayout() {

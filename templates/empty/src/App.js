@@ -4,7 +4,7 @@ export default class App {
   constructor() {
     const root = new View();
     (async () => {
-      await root.loadLayout("/src/layout/mainlayout.js");
+      await root.loadLayout("/src/layout/mainlayout.html");
       root.render();
     })();
   }

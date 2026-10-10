@@ -1,5 +1,4 @@
 import { View, layout } from "jops-core";
-// import Card from "./Card.js";
 
 export default class Features extends View {
   constructor() {
@@ -13,10 +12,6 @@ export default class Features extends View {
     `;
     this.inflate();
   }
-
-  //async loadLayout() {
-  //  await super.loadLayout("/src/layout/layout_features.js");
-  //}
 
   async onLayout() {
     for (const item of data) {
@@ -38,10 +33,6 @@ class Card extends View {
     `;
     this.inflate();
   }
-
-  // async loadLayout() {
-  //  await super.loadLayout("/src/layout/card.js");
-  // }
 
   onLayout() {
     this.get("title").set(this.title);

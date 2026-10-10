@@ -6,7 +6,7 @@ export default class Form extends View {
   }
 
   async loadLayout() {
-    await super.loadLayout("/src/layout/layout_form.js");
+    await super.loadLayout("/src/layout/layout_form.html");
   }
 
   onSubmit(event) {

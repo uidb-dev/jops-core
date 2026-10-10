@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.12 — 2026-10-10
+
+- Router: deep links keep their query string on first load (`index.html#form?tab=2`), so `getParams()` returns the params immediately.
+- HTML file layouts: `loadLayout()` and the `layout=` attribute now accept `.html` files in addition to `.js` modules. The framework fetches and caches the file for the page lifetime — identical dedup behaviour to JS module layouts.
+- Path normalisation: `isCDN` auto-detected at startup; `normalizePath()` ensures correct relative/absolute paths for CDN vs npm installs, applied at all dynamic import and fetch sites.
+
 ## 1.0.11 — 2026-10-09
 
 - Router: all route subviews are now initialised as hidden, eliminating the brief flash of non-active views on first render.
