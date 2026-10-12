@@ -117,6 +117,166 @@ This gives you HTML syntax highlighting, Emmet, and autocomplete inside every ``
 
 ---
 
+## Hybrid Mobile Apps (Cordova, Ionic & Capacitor)
+
+JOPS runs unchanged inside a mobile WebView, so the same app can ship to the iOS App Store and Google Play through a hybrid shell. Nothing on this page affects JOPS in a regular browser: every mobile adjustment is either feature-detected (it only runs when the native shell is present) or a CSS value that resolves to `0` outside it.
+
+| Shell | Status |
+| --- | --- |
+| Apache Cordova (iOS + Android) | Supported and tested (cordova-ios 8, cordova-android 15) |
+| Capacitor (iOS + Android) | Supported and tested (Capacitor 8) — install `@capacitor/app` for the Android back button |
+| Ionic | Use Ionic's framework-free UI components (`@ionic/core`) on top of Cordova or Capacitor. `ionic start` always scaffolds an Angular, React or Vue app, which JOPS is not meant to be combined with — start from a plain Cordova or Capacitor project instead |
+
+### Setup order
+
+**1. Create the hybrid project and its platforms.**
+
+```bash
+# Cordova
+cordova create my-app com.example.myapp MyApp
+cd my-app
+cordova platform add ios android
+```
+
+```bash
+# Capacitor
+mkdir my-app && cd my-app
+npm init -y
+npm i @capacitor/core @capacitor/ios @capacitor/android @capacitor/app
+npm i -D @capacitor/cli
+npx cap init MyApp com.example.myapp --web-dir www
+npx cap add ios
+npx cap add android
+```
+
+**2. Install JOPS in the project root** — the folder with `package.json`, *not* inside `www/`. Cordova and Capacitor copy the whole web folder into the app, so a `node_modules/` there would be bundled too.
+
+```bash
+npm i jops-core
+```
+
+**3. Run `init` from the project root** (running it from inside `www/` / your `webDir` works too):
+
+```bash
+npx jops-core init
+```
+
+`init` detects the project type and writes the app into the web folder that the shell actually serves — `www/` for Cordova, the `webDir` from `capacitor.config.*` for Capacitor:
+
+```
+[jops-core] Detected cordova project → web folder: www/
+```
+
+**4. Build and run** with the shell's own tools: `cordova run ios` / `cordova run android`, or `npx cap sync` followed by `npx cap run ios` / `npx cap run android` (or open the native project in Xcode / Android Studio).
+
+### What `npx jops-core init` configures
+
+| | Web | Cordova | Capacitor |
+| --- | --- | --- | --- |
+| `index.html`, `lib/`, template | current folder | `www/` | `webDir` |
+| `.vscode/` and `package.json` scripts | current folder | project root | project root |
+| `viewport-fit=cover` | — | ✓ | ✓ |
+| Content-Security-Policy | — | adds `'unsafe-inline'` (inline import map) and `blob:` (`Thread` workers) to `script-src` | — (Capacitor has none by default) |
+| `<script src="cordova.js">` | — | ✓ | — |
+| iOS custom scheme in `config.xml` | — | ✓ (`app://localhost`) | — (Capacitor uses `capacitor://localhost`) |
+| `"build"` script in `package.json` | ✓ | — (use `cordova build`) | — (use `npx cap sync`) |
+| `"postinstall": "npx jops-core init"` | ✓ | ✓ | ✓ |
+
+- Every step checks first, so running `init` again — including through `postinstall` — never duplicates anything.
+- **Cordova's sample page:** when you pick the *Empty* or *Hello World* template and `www/index.html` is still the page created by `cordova create`, `init` renames it to `www/index.cordova.html` and writes a JOPS `index.html` instead (the sample's `js/index.js` expects markup that a JOPS app replaces). No files are deleted; `css/`, `img/` and `js/` from the sample can be removed by hand.
+- **iOS scheme (Cordova):** JOPS loads `App.js`, views and layouts with native `import()` and `fetch()`, which WebViews block on `file://` pages. Cordova Android and Capacitor already serve from `https://localhost`; for Cordova iOS, `init` adds the following to `config.xml` (applied on the next `cordova prepare` / `build` / `run`):
+
+  ```xml
+  <platform name="ios">
+      <preference name="scheme" value="app" />
+      <preference name="hostname" value="localhost" />
+  </platform>
+  ```
+
+  Values you already set are never changed — any custom scheme works. `init` warns if the iOS scheme is `file`, `http` or `https`, or if `AndroidInsecureFileModeEnabled` is `true`, since both keep the app on `file://`. **Already-published apps:** the new origin cannot see data stored under `file://` (localStorage, IndexedDB), so plan a migration if your app stores data locally.
+- `npx jops-core update` writes to the same web folder, and `npx jops-core build` is skipped in hybrid projects (the web folder is shipped as-is).
+- Override the detection with `--cordova`, `--capacitor` or `--web` (for example `npx jops-core init --web` to treat the current folder as a plain web app).
+
+For reference, the `index.html` that `init` produces for a new Cordova project:
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' data: blob: https://ssl.gstatic.com; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob:; media-src * blob:; img-src 'self' data: blob: content:;" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <script type="importmap">
+    { "imports": { "jops-core": "/lib/jops-core.min.js" } }
+  </script>
+</head>
+<body>
+  <script src="cordova.js"></script>
+  <script type="module" src="/lib/jops-core.min.js" data-app="./src/App.js"></script>
+</body>
+```
+
+### Android back button
+
+In Cordova and Capacitor, JOPS connects the Android back button (key and gesture) to the Router automatically:
+
+- If `Router.singleton().canGoBack()` is `true`, it calls `Router.back()` — the current view receives `onBackPressed()` exactly as with browser back.
+- On the first screen, it closes the app (`navigator.app.exitApp()`), the standard Android behaviour.
+
+This is required on Android 16 (`targetSdk 36`, predictive back): without a `backbutton` listener, Cordova lets the system handle back and the app closes on the first press regardless of history. It also smooths over a cordova-android 15 issue where one key press fires `backbutton` twice.
+
+The hook only activates on the `deviceready` event, which Cordova and Capacitor fire and a regular browser never does. If your app handles `backbutton` itself, turn the built-in handler off:
+
+```html
+<script type="module" src="/lib/jops-core.min.js" data-app="./src/App.js" data-native-back="off"></script>
+```
+
+**Capacitor:** install the official App plugin — no code is needed:
+
+```bash
+npm i @capacitor/app
+npx cap sync
+```
+
+Capacitor's Cordova compatibility layer fires `deviceready` and forwards JOPS's `backbutton` listener to the plugin, so the behaviour above applies unchanged. Without `@capacitor/app`, Capacitor does not intercept back at all and the app closes on the first press; JOPS logs a console warning in that case.
+
+> **Do not** also register `App.addListener("backButton", ...)` while the built-in handler is on: the plugin calls your listener *and* fires `backbutton`, so every press would go back twice.
+
+To handle back yourself in Capacitor, opt out with `data-native-back="off"` and use the plugin's global (no bundler needed):
+
+```js
+const { App } = window.Capacitor.Plugins;
+
+App.addListener("backButton", () => {
+  const router = Router.singleton();
+  if (router?.canGoBack()) router.back();
+  else App.exitApp();
+});
+```
+
+### Notches, Dynamic Island and the home indicator
+
+With `viewport-fit=cover` (added by `npx jops-core init` in Cordova and Capacitor projects) the page extends under the status bar and the home indicator. Pad fixed or sticky bars with the safe-area insets — they are `0` in a regular browser, so the layout is unchanged there:
+
+```css
+.header {
+  padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+}
+.footer {
+  padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+```
+
+The Hello World template already does this.
+
+### Debugging
+
+- **Android:** open `chrome://inspect` in desktop Chrome while the emulator or a device runs the debug build.
+- **iOS:** Safari → Develop → *Simulator* → your app.
+
+A `cordova_plugins.js` "not found" error in the console is expected when the project has no Cordova plugins installed; it is harmless.
+
+---
+
 ## Class Reference
 
 ### `View` — Base Class
@@ -138,7 +298,7 @@ export default class MyView extends View { ... }
 | `async onLayout()`        | DOM is live — add subviews, read initial data                                  |
 | `async onResume()`        | View becomes visible — called on first display and on every return navigation  |
 | `bindEvents()`            | Wires `on*` attributes on `[jops-event-bind]` elements to class methods |
-| `onBackPressed()`         | Called by Router when back navigation is detected on this view                 |
+| `onBackPressed()`         | Called by Router when the user navigates back from this view (browser back, `Router.back()`, Android back button in hybrid apps) — never on forward navigation |
 
 #### Instance Methods
 
@@ -266,6 +426,7 @@ Hash-based SPA router. Singleton. Declared in the layout as `<Router jops animat
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `navigate(path, ClassDef?)` | Creates a new view instance for `path`, pushes onto the nav stack, animates forward. Updates address bar to `#path?params`. `ClassDef` required for dynamic routes not in the static route map |
 | `back()`                    | Navigates back — pops the nav stack with animation if non-empty, otherwise calls `history.back()`                                                                                              |
+| `canGoBack()`               | Returns `true` if there is an earlier JOPS history entry to go back to (like checking the back stack in Android)                                                                              |
 | `replace(path, ClassDef?)`  | Clears the nav stack and navigates to `path`. Uses existing flat route instance if available, otherwise creates a new one from `ClassDef`                                                      |
 | `getParams()`               | Returns the current URL query params as a plain object. Works for both static (`href="#path?k=v"`) and dynamic (`navigate("/path?k=v")`) routes                                                |
 
@@ -393,9 +554,11 @@ t.terminate();
 
 | Command                | Description                                                                |
 | ---------------------- | -------------------------------------------------------------------------- |
-| `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json` |
+| `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json`. Detects Cordova and Capacitor projects (see [Hybrid Mobile Apps](#hybrid-mobile-apps-cordova-ionic--capacitor)) |
 | `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/`          |
-| `npx jops-core build`  | Generate production-ready `dist/` folder                                   |
+| `npx jops-core build`  | Generate production-ready `dist/` folder (skipped in Cordova/Capacitor projects) |
+
+`init` and `update` accept `--cordova`, `--capacitor` or `--web` to override the detected project type.
 
 ---
 

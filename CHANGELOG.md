@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.0.13 — 2026-10-13
+
+Hybrid mobile support — JOPS apps now run in Apache Cordova and Capacitor (iOS + Android), tested with cordova-ios 8, cordova-android 15 and Capacitor 8. See the new README section "Hybrid Mobile Apps (Cordova, Ionic & Capacitor)".
+
+- Android back button: in Cordova and Capacitor (with `@capacitor/app`), the hardware/gesture back button now navigates the Router (`Router.back()`) and closes the app on the first screen. Required on Android 16 (`targetSdk 36`), where back otherwise closes the app immediately. Activates only on `deviceready`, so regular browsers are unaffected; opt out with `data-native-back="off"` on the jops-core script tag. In Capacitor without `@capacitor/app`, a console warning explains what to install.
+- `npx jops-core init` detects Cordova (`config.xml`) and Capacitor (`capacitor.config.*`) projects — run it from the project root (or from inside `www/` / `webDir`) and it writes the app into the folder the shell serves. In hybrid projects it also:
+  - adds `viewport-fit=cover` to `index.html`;
+  - Cordova: allows the inline import map and `Thread` workers in the Content-Security-Policy (`'unsafe-inline'`, `blob:`), adds `cordova.js`, backs up Cordova's sample page as `index.cordova.html`, and sets the iOS custom scheme (`app://localhost`) in `config.xml` — existing values are never changed;
+  - keeps `.vscode/` and `package.json` scripts in the project root, skips the `build` script, and `npx jops-core build` is not used there;
+  - `--cordova`, `--capacitor` and `--web` override the detection. Plain web projects get exactly the same output as before.
+- Router: new `canGoBack()` method.
+- Router fix: `onBackPressed()` is no longer called on forward navigation (tapping an `href="#route"` link fired it in every browser). It now runs only when the user actually navigates back. History entries carry a position (`history.state.jopsIdx`), so back and forward are told apart, including after a reload.
+- Router: tapping a flat-route link while `navigate()` views are stacked now closes the stack (previously it played a back animation), and back skips the history entries of those closed views.
+- Hello World template: header and footer are padded with `env(safe-area-inset-*)` for notches, the Dynamic Island and the home indicator (no change in regular browsers).
+
 ## 1.0.12 — 2026-10-10
 
 - Router: deep links keep their query string on first load (`index.html#form?tab=2`), so `getParams()` returns the params immediately.

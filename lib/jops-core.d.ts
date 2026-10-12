@@ -72,9 +72,12 @@ export declare class View {
      */
     constructor(layout?: string);
     /**
-     * Override to load a layout `.js` module or set `this.layout` inline.
+     * Override to load a layout file or set `this.layout` inline.
      * Called automatically by the framework before `inflate()`.
-     * @param {string} [layout] - Path to a `.js` layout module or an inline HTML string.
+     * @param {string} [layout] - Path to a `.js` layout module, a `.html` file, or an inline HTML string.
+     *   `.js` — dynamically imported as an ES module; must export a `layout\`...\`` string as default.
+     *   `.html` — fetched and cached for the page lifetime; plain HTML fragment, no import/export needed.
+     *   Any other value — treated as an inline HTML string assigned directly to `this.layout`.
      * @returns {Promise<void>}
      */
     loadLayout(layout?: string): Promise<void>;
@@ -241,7 +244,7 @@ export declare class Router extends View {
     routes: {};
     _navStack: any[];
     _baseView: any;
-    _pendingBack: boolean;
+    _idx: any;
     _currentView: any;
     /**
      * Returns the single Router instance after it has been rendered.
@@ -251,6 +254,14 @@ export declare class Router extends View {
     constructor(routerDomNode: any);
     onLayout(): Promise<void>;
     initRouter(): void;
+    /**
+     * Single entry point for popstate and hashchange. Decides the direction
+     * from the history entry's position and dispatches to _onBack/_onForward.
+     */
+    _onHistoryChange(): void;
+    _onBack(): void;
+    _onForward(): void;
+    _switchToHash(): void;
     _animateTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
     _slideTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
     _fadeTransition(outgoing: any, incoming: any): Promise<void>;
@@ -260,6 +271,12 @@ export declare class Router extends View {
      * otherwise calls `history.back()`.
      */
     back(): void;
+    /**
+     * Returns true if there is an earlier JOPS history entry to go back to.
+     * Equivalent to checking the back stack before calling `onBackPressed()` in Android.
+     * @returns {boolean}
+     */
+    canGoBack(): boolean;
     /**
      * Returns the current URL query params as a plain object.
      * Works for both flat (`href="#path?k=v"`) and stack (`navigate("/path?k=v")`) routes.
