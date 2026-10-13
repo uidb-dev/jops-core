@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.14 — 2026-10-13
+
+- Added npm keywords for hybrid mobile discoverability: `cordova`, `capacitor`, `ionic`, `mobile`, `android`, `ios`, `hybrid-app`, `hybrid-mobile`, `phonegap`.
+
 ## 1.0.13 — 2026-10-13
 
 Hybrid mobile support — JOPS apps now run in Apache Cordova and Capacitor (iOS + Android), tested with cordova-ios 8, cordova-android 15 and Capacitor 8. See the new README section "Hybrid Mobile Apps (Cordova, Ionic & Capacitor)".
