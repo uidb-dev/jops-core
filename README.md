@@ -560,6 +560,8 @@ t.terminate();
 
 `init` and `update` accept `--cordova`, `--capacitor` or `--web` to override the detected project type.
 
+After each command the CLI checks npm for a newer jops-core and prints a notice if one is available (at most 1.5 s, silent when offline). `build` also warns if `lib/jops-core.min.js` doesn't match the installed version. Turn the check off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`; it is skipped automatically when `CI` is set.
+
 ---
 
 ## Source & Contributing

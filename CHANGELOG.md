@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.15 — 2026-10-15
+
+- CLI: `init`, `update` and `build` now tell you when a newer jops-core is on npm, with the exact upgrade commands. If you run `update` before `npm i jops-core@latest`, it explains that it copied the old version. The check takes at most 1.5 s, is silent when offline, and is skipped when `CI` is set. Turn it off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`.
+- CLI: `build` warns when `lib/jops-core.min.js` doesn't match the installed package, i.e. `npx jops-core update` was forgotten after an upgrade.
+
 ## 1.0.14 — 2026-10-13
 
 - Added npm keywords for hybrid mobile discoverability: `cordova`, `capacitor`, `ionic`, `mobile`, `android`, `ios`, `hybrid-app`, `hybrid-mobile`, `phonegap`.
