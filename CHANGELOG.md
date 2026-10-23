@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 — 2026-10-23
+
+Documentation only; no library changes.
+
+- README: hosted mode (`data-host`, `mount()` / `unmount()`) moved out of the Next.js section into its own section, "Embedding JOPS in Other Pages (Hosted Mode)", for plain HTML pages and other server frameworks. The example now loads the library from jsDelivr, and the section explains how paths resolve with the CDN (relative to the hosting page) and with a vendored library (root-absolute). Inside a Next.js page, always use `JopsApp`.
+- README: `data-root` (render a standalone app into an element instead of `<body>`) is now documented in the CDN installation section.
+
 ## 1.1.0 — 2026-10-23
 
 Next.js integration: a JOPS SPA can now run inside a page of a Next.js (App Router) app, next to React, with Next.js Route Handlers as its backend. See the new README section "Next.js Integration". This release also adds new View and EventBus APIs and fixes found while building a full app on JOPS inside Next.js.
