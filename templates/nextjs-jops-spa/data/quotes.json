@@ -1,0 +1,62 @@
+[
+  {
+    "id": "q4",
+    "number": "Q-2026-0004",
+    "companyName": "Greenfield Foods",
+    "dealTitle": "Onboarding package",
+    "status": "rejected",
+    "createdAt": "2026-09-17T00:00:00.000Z",
+    "totals": {
+      "gross": 9600.0,
+      "discount": 0.0,
+      "subtotal": 9600.0,
+      "tax": 1632.0,
+      "total": 11232.0
+    }
+  },
+  {
+    "id": "q3",
+    "number": "Q-2026-0003",
+    "companyName": "Copperleaf Software",
+    "dealTitle": "Fleet expansion",
+    "status": "accepted",
+    "createdAt": "2026-09-13T00:00:00.000Z",
+    "totals": {
+      "gross": 36000.0,
+      "discount": 3320.0,
+      "subtotal": 32680.0,
+      "tax": 5555.6,
+      "total": 38235.6
+    }
+  },
+  {
+    "id": "q2",
+    "number": "Q-2026-0002",
+    "companyName": "Blue Harbor Health",
+    "dealTitle": "Support renewal",
+    "status": "sent",
+    "createdAt": "2026-09-09T00:00:00.000Z",
+    "totals": {
+      "gross": 15700.0,
+      "discount": 480.0,
+      "subtotal": 15220.0,
+      "tax": 2587.4,
+      "total": 17807.4
+    }
+  },
+  {
+    "id": "q1",
+    "number": "Q-2026-0001",
+    "companyName": "Acme Robotics",
+    "dealTitle": "Pilot project",
+    "status": "draft",
+    "createdAt": "2026-09-05T00:00:00.000Z",
+    "totals": {
+      "gross": 10800.0,
+      "discount": 0.0,
+      "subtotal": 10800.0,
+      "tax": 1836.0,
+      "total": 12636.0
+    }
+  }
+]

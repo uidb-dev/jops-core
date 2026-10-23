@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.1.0 — 2026-10-23
+
+Next.js integration: a JOPS SPA can now run inside a page of a Next.js (App Router) app, next to React, with Next.js Route Handlers as its backend. See the new README section "Next.js Integration". This release also adds new View and EventBus APIs and fixes found while building a full app on JOPS inside Next.js.
+
+### Next.js integration
+
+- New `JopsApp` React component, imported from `jops-core/nextjs`: `<JopsApp app="/my-app/App.js" />` loads the library once per page, adds the `"jops-core"` import map and mounts the app into its own `<div>`. Props: `app`, `id`, `className`, `lib`. `react` and `next` are optional peer dependencies; plain JOPS apps don't need them.
+- Hosted mode: load jops-core with `data-host` and nothing starts automatically; `window.JOPS.mount({ app, root })` starts an app inside any element and `window.JOPS.unmount()` ends it. `mount` and `unmount` are also exported by the module.
+- Leaving the host page (a link or Back past the app's first entry) ends the app completely: Router, views, container content, `Store`, `EventBus` and JOPS's history hooks are all removed. Coming back launches it again and restores the screen from the hash. Next.js links to the app's own page are handled by the running app, and Next.js history state is kept in every entry JOPS writes.
+- `setStyle()` has no effect inside Next.js: the host owns the CSS (Tailwind CSS in Next.js also scans the JOPS files in `public/`).
+- `npx jops-core init` has a new template, **3. Next.js JOPS Embedded SPA**: a Next.js project with a React page, a page hosting a JOPS SPA (mock login and a quotes list) and a Route Handler backend. It is written into the current folder and merged into an existing `package.json`.
+- `npx jops-core update` detects Next.js projects and copies the library to `public/lib/`.
+- Standalone apps can render into an element instead of `<body>`: `data-root="<id>"` on the jops-core script tag.
+
+### New APIs
+
+- `onPause()` lifecycle hook: called when another view comes to the front while this one stays alive (another route shown, a stacked view opened with `navigate()`, `replace()` to another view). Pairs with `onResume()`.
+- Tag props: attributes on a declared `jops` tag reach the view as read-only `this.props` (camelCase names, string values), e.g. `<Card jops src="/src/Card.js" title="Hi" item-id="7">` → `{ title: "Hi", itemId: "7" }`. Views created in code can pass props as the second constructor argument: `new View(layout, props)`.
+- Layouts may have several top-level elements. `get(id)` searches all of them; `this.domNodes` holds them all (`this.domNode` stays the first).
+- `find(id)` returns an `Element` for every element with that id; `find(predicate)` is unchanged.
+- `EventBus.subscribe(owner, event, callback)`: the subscription is removed automatically when the owner (usually a view) is destroyed. Also new: `EventBus.unsubscribeAll(owner)` and `EventBus.clear()`. The global `subscribe(event, callback)` form is unchanged.
+- `Element.from(element, id)`.
+
+### Fixes and improvements
+
+- The root view now gets the full lifecycle (`onLayout()`, `onResume()`, event binding) and `get()` works on it; it used to get none, so `onclick` handlers in its own layout failed.
+- Declared views keep their layout order, so the first route in `<Router>` is reliably the default route (it used to depend on which view file loaded first).
+- Router routes are resumed only when shown: at startup only the selected route gets `onResume()`, once (hidden routes got it too, and the selected one twice).
+- A view opened with `navigate()` gets `onResume()` once (it was called twice).
+- An empty hash after startup (`href="#"`, Back to an entry without a hash) shows the default route instead of being ignored.
+- `Router.replace()` keeps the existing `history.state`.
+- `loadLayout()` loads once per view: overriding `loadLayout()` no longer fetches each layout twice, and `new View("/layout.html")` + `addSubView()` now works (it threw a `TypeError`).
+- `setStyle()` with inline CSS containing line breaks or quotes no longer throws a `SyntaxError`.
+- `Element.set()`, `attr()` and `value()` never throw: a wrong id logs a warning with the id, and calls on a destroyed view (e.g. after an async request) do nothing.
+- `addSubView()` / `insertSubView()` with a destroyed view, a missing container or a layout that failed to load log a warning and add nothing (they threw, or left the view half-added).
+- `View.destroy()` removes the view's owned `EventBus` subscriptions; destroying the root view empties its container instead of removing it.
+
+### Behaviour changes to check
+
+- `npx jops-core init`: "None" moved from choice 3 to choice 4. Scripts that pipe `3` into `init` now get the Next.js template.
+- `find("some-id")` with a string used to throw; it now returns an array of `Element`s.
+- New npm keywords: `nextjs`, `next-js`, `next.js`, `ssr`.
+
 ## 1.0.15 — 2026-10-15
 
 - CLI: `init`, `update` and `build` now tell you when a newer jops-core is on npm, with the exact upgrade commands. If you run `update` before `npm i jops-core@latest`, it explains that it copied the old version. The check takes at most 1.5 s, is silent when offline, and is skipped when `CI` is set. Turn it off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`.
