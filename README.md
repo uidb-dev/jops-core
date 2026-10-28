@@ -23,6 +23,8 @@ No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
 
 **Next.js teams:** a JOPS SPA can also run inside a Next.js page, next to React, with Next.js as its backend. See [Next.js Integration](#nextjs-integration).
 
+**WordPress sites:** a JOPS SPA can run inside a WordPress page (Elementor or the block editor) through the JOPS plugin and its `[jops]` shortcode. See [WordPress Integration](#wordpress-integration).
+
 ---
 
 ## JOPS Demos
@@ -54,7 +56,7 @@ The import map lets your app modules use `import { View } from "jops-core"`. The
 
 `App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it.
 
-Replace `@latest` with a specific version (e.g. `@1.1.1`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.1.2`) to pin. No build step, no npm, no bundler.
 
 By default the app renders into `<body>`. To render it into an element instead (keeping the rest of the page), add `data-root` with the element's id:
 
@@ -397,11 +399,95 @@ The result is a standard Next.js app: `npm run build` produces `.next/`, and it 
 
 ---
 
+## WordPress Integration
+
+A JOPS SPA can run on a WordPress site, either inside a page next to the theme and the page's other content (built with Elementor or the block editor), or as a separate app in its own folder. WordPress stays the CMS and the backend; the JOPS app's files are served as static files.
+
+| | Embedded in a page | Independent SPA |
+| --- | --- | --- |
+| What it is | The app renders inside a WordPress page, below the theme's header and next to the page's content | A complete JOPS app with its own `index.html`, opened at `https://<site>/<folder>/` |
+| How | The **JOPS plugin** and the `[jops]` shortcode, or an Elementor HTML widget | Upload the app folder; no plugin |
+| Shares the theme, menu and page | Yes | No (separate document) |
+
+### Install the JOPS plugin
+
+The plugin registers the `[jops]` shortcode and includes the jops-core library, so the page needs nothing else. Pick the way that matches your site:
+
+| Your site | Install |
+| --- | --- |
+| **No npm** (hosting with wp-admin only, XAMPP, MAMP, LocalWP, …) | Download [`jops-wordpress.zip`](https://github.com/uidb-dev/jops-core/releases/latest/download/jops-wordpress.zip), then wp-admin → **Plugins → Add New Plugin → Upload Plugin** → choose the zip → **Install Now** → **Activate** |
+| **npm project run by [`wp-env`](https://www.npmjs.com/package/@wordpress/env)** (a folder with `.wp-env.json`) | `npx jops-core init --wp` in that folder: it writes the plugin to `plugins/jops/` and adds `"./plugins/jops"` to `.wp-env.json`. `npx wp-env start` then installs and activates it |
+| **npm project inside a WordPress folder** (a theme, a plugin, a Bedrock project, …) | `npx jops-core init --wp`: it searches this folder and the folders above it for WordPress (`wp-load.php` + `wp-content/`, or Bedrock's `web/wp/` + `web/app/`) and writes the plugin to its plugins folder. Use `--wp-root <path>` to point to WordPress yourself. Then activate the plugin in wp-admin (or `wp plugin activate jops`) |
+
+The three ways install the same plugin into `wp-content/plugins/jops/`.
+
+- **Updating:** without npm, upload the newer zip the same way and choose **Replace current with uploaded**. With npm, run `npm i jops-core@latest` and then `npx jops-core update`, which refreshes the plugin and its library.
+- **Keep `package.json` out of the WordPress root:** a `node_modules/` folder there is served publicly. `init --wp` warns when it finds one.
+
+### Put the app in the WordPress root
+
+1. **Place the app folder in the WordPress root** (the folder with `wp-config.php`), e.g. `<root>/jops-spa/`. How it gets there is up to you: upload it, copy it with FTP or SSH, deploy it with your pipeline, or map it with a `"mappings"` entry in `.wp-env.json`. A real folder is served as static files: WordPress only handles URLs that are not existing files or folders.
+2. **Use root-based paths everywhere** JOPS loads something: `mount()`/`app`, `src=`, `layout=`, `loadLayout()`, stylesheets and images, e.g. `/jops-spa/src/App.js` and `loadLayout("/jops-spa/src/layout/main.html")`. If WordPress runs in a subfolder (`example.com/blog/`), include it: `/blog/jops-spa/...`. ES module `import` statements inside your `.js` files resolve relative to the file as usual.
+3. **Pick a folder name that is not a page slug** and doesn't start with `wp-`: the folder always wins over a WordPress page with the same address.
+
+To start without npm, copy the [hello-world template](https://github.com/uidb-dev/jops-core/tree/main/templates/hello-world) (`src/` and `assets/`) into `<root>/jops-spa/` and change its paths to root-based ones: `/src/...` and `./src/...` become `/jops-spa/src/...`, and `/assets/...` becomes `/jops-spa/assets/...`.
+
+### Add the app to a page
+
+Edit the page with Elementor, add a **Shortcode** widget (General → Shortcode) and enter:
+
+```text
+[jops app="/jops-spa/src/App.js" id="jops-spa-root" class="jops-spa"]
+```
+
+In the block editor, use the **Shortcode** block; any editor that runs shortcodes works the same way.
+
+| Attribute | Description |
+| --- | --- |
+| `app` | **Required.** Root-based path of the app's entry module (its default export is created) |
+| `id` | `id` of the app's root `<div>` (default `jops-root`) |
+| `class` | `class` of the root `<div>`; use it to scope the app's CSS |
+| `lib` | URL of `jops-core.min.js` (default: the plugin's copy). Use one URL per page, or the browser loads two jops-core instances |
+
+- **The app runs on the published page.** In the Elementor editor the widget shows a placeholder ("JOPS app … runs on the published page") and loads no scripts.
+- **One JOPS app per page.** A second `[jops]` on the same page logs a warning and is not started.
+- The shortcode outputs the import map, the library in hosted mode, the root `<div>` and a small script that calls `mount()` once the library has loaded (see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode)).
+
+**Without the plugin**, an Elementor **HTML** widget can hold the same code by hand. Vendor the library in the app folder (`/jops-spa/lib/jops-core.min.js`, copied from `node_modules/jops-core/lib/` or the [release files](https://github.com/uidb-dev/jops-core/tree/main/lib)):
+
+```html
+<script type="importmap">
+  { "imports": { "jops-core": "/jops-spa/lib/jops-core.min.js" } }
+</script>
+<script type="module" src="/jops-spa/lib/jops-core.min.js" data-host></script>
+
+<div id="jops-spa-root" class="jops-spa" style="position: relative"></div>
+<script type="module">
+  const start = () => window.JOPS.mount({ app: "/jops-spa/src/App.js", root: document.getElementById("jops-spa-root") });
+  window.JOPS ? start() : window.addEventListener("jops:ready", start, { once: true });
+</script>
+```
+
+Don't combine the shortcode and a hand-written import map on the same page.
+
+### Conventions
+
+- **CSS:** `setStyle()` has no effect on an embedded app (the page owns the CSS). Link the app's stylesheet from its layout (`<link rel="stylesheet" href="/jops-spa/src/css/styles.css">`) or add it to the theme. It applies to the whole page, so scope every rule under the root class (`.jops-spa .card { … }`) and avoid global rules (`body`, `*`, `:root`, bare tag selectors).
+- **Routing:** WordPress owns the path (`/my-page/`), JOPS owns the hash (`/my-page/#details?id=7`). Leaving the page is a full page load, which ends the app.
+- **Backend:** call the WordPress REST API with `fetch("/wp-json/…")`. Requests are same-origin, so the login cookie is sent; requests that need the logged-in user (and every write) also need a REST nonce (`X-WP-Nonce` header, created with `wp_create_nonce("wp_rest")`), which your own theme or plugin code must provide to the app.
+- **Caching:** the app's files are static, and caching plugins, CDNs and browsers may keep serving old copies after an update. Use versioned paths or short cache headers for the app folder, and hard-reload while developing.
+
+### Independent SPA
+
+A complete JOPS app with its own `index.html` (as created by `npx jops-core init`) also runs from a folder in the WordPress root: upload it as `<root>/jops-spa/` and open `https://<site>/jops-spa/`. WordPress is not involved. With the library from the CDN, the app's `./` paths work as they are; with a vendored library, use root-based paths (`/jops-spa/src/App.js`, `/jops-spa/lib/jops-core.min.js` in the import map and the script tag).
+
+---
+
 ## Embedding JOPS in Other Pages (Hosted Mode)
 
-A JOPS app can run inside any page that is not a React component: a plain HTML page, or a page rendered by another server framework (PHP, ASP.NET, Rails, Django, …). This is the mechanism `JopsApp` uses in Next.js; **inside a Next.js page, use `JopsApp`** instead (see [Next.js Integration](#nextjs-integration)).
+A JOPS app can run inside any page that is not a React component: a plain HTML page, or a page rendered by another server framework (PHP, ASP.NET, Rails, Django, …). This is the mechanism `JopsApp` uses in Next.js and the JOPS plugin uses in WordPress; **inside a Next.js page, use `JopsApp`** instead (see [Next.js Integration](#nextjs-integration)), and on a WordPress site the `[jops]` shortcode (see [WordPress Integration](#wordpress-integration)).
 
-Load the library with `data-host` and no `data-app`: nothing starts automatically, and `window.JOPS` exposes `mount()` and `unmount()` (a `jops:ready` event fires when it is available). The import map and the script `src` must be the same URL, so the page has a single jops-core instance.
+Load the library with `data-host` and no `data-app`: nothing starts automatically, and `window.JOPS` exposes `mount()` and `unmount()` (a `jops:ready` event fires once jops-core has fully loaded, so a listener may call `mount()` directly). The import map and the script `src` must be the same URL, so the page has a single jops-core instance.
 
 ```html
 <script type="importmap">
@@ -493,6 +579,7 @@ Optional hooks, called by the Router:
 | `addSubView(containerId, view)` | Appends `view` into the child element with `id="containerId"`, runs its full lifecycle                         |
 | `insertSubView(view, index)`    | Inserts `view` at position `index` within `this.domNode`, runs its full lifecycle                              |
 | `removeSubView(view)`           | Removes `view` from DOM and `this.subViews`, calls `view.destroy()`                                            |
+| `removeSubViews(condition?)`    | Removes every subview with `removeSubView()`, or only those matching `condition` (the others keep their order). Direct subviews only; not available on a `Router` (logs a warning) |
 | `show()`                        | Shows the view again (removes the inline `display` override)                                                   |
 | `hide()`                        | Hides the view (`display: none`)                                                                               |
 | `destroy()`                     | Recursively destroys subtree — calls `destroy()` on all subviews, removes the view's elements from the DOM, removes its owned `EventBus` subscriptions, nulls references |
@@ -580,7 +667,7 @@ Returned by `view.get(id)` (and, as an array, by `view.find(id)`). Wraps a singl
 
 `set()`, `attr()` and `value()` never throw. When no element has the id, they do nothing (`value()` returns `""`) and log a warning with the id — usually a typo. On a destroyed view (for example after an async request finished when the user had already left), they do nothing silently. Code that uses `element` or `this.domNode` directly has no such guard.
 
-> `set()` replaces plain markup. Don't use it to clear a container that holds sub-views: call `removeSubView()` for each of them first, otherwise they stay in the parent's `subViews`.
+> `set()` replaces plain markup. Don't use it to clear a container that holds sub-views: call `removeSubViews()` (or `removeSubView()` for each of them) first, otherwise they stay in the parent's `subViews`.
 
 ```js
 this.get("username").set("Alice");
@@ -830,7 +917,7 @@ Prefer the owned form inside views. A global subscription made by a view keeps t
 
 ### `mount()` / `unmount()` — Functions
 
-Start and end an app in a host page (hosted mode). Used by `JopsApp` in Next.js; see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode). The page must load jops-core with `data-host` (otherwise it starts `data-app` / `./src/App.js` by itself); `window.JOPS.mount` / `window.JOPS.unmount` are the same functions.
+Start and end an app in a host page (hosted mode). Used by `JopsApp` in Next.js and by the JOPS WordPress plugin; see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode). The page must load jops-core with `data-host` (otherwise it starts `data-app` / `./src/App.js` by itself); `window.JOPS.mount` / `window.JOPS.unmount` are the same functions.
 
 ```js
 import { mount, unmount } from "jops-core";
@@ -882,10 +969,11 @@ t.terminate();
 | Command                | Description                                                                |
 | ---------------------- | -------------------------------------------------------------------------- |
 | `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json`. Detects Cordova and Capacitor projects (see [Hybrid Mobile Apps](#hybrid-mobile-apps-cordova-ionic--capacitor)). Template 3 creates a Next.js project instead (see [Next.js Integration](#nextjs-integration)) |
-| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project) |
+| `npx jops-core init --wp` | Install the JOPS WordPress plugin: into `plugins/jops/` of a `wp-env` project, otherwise into the plugins folder of the WordPress installation found in this folder or above it (see [WordPress Integration](#wordpress-integration)) |
+| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project); also refreshes an installed JOPS WordPress plugin |
 | `npx jops-core build`  | Generate production-ready `dist/` folder (skipped in Cordova/Capacitor projects) |
 
-`init` and `update` accept `--cordova`, `--capacitor` or `--web` to override the detected project type.
+`init` and `update` accept `--cordova`, `--capacitor` or `--web` to override the detected project type, and `--wp-root <path>` to point to a WordPress folder instead of searching for it (implies `--wp`).
 
 After each command the CLI checks npm for a newer jops-core and prints a notice if one is available (at most 1.5 s, silent when offline). `build` also warns if `lib/jops-core.min.js` doesn't match the installed version. Turn the check off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`; it is skipped automatically when `CI` is set.
 

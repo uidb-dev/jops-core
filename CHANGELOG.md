@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.1.2 — 2026-10-28
+
+WordPress integration: a JOPS SPA can now run inside a WordPress page, next to the theme and the page's other content, through the new JOPS WordPress plugin. See the new README section "WordPress Integration".
+
+### WordPress integration
+
+- New JOPS WordPress plugin with the `[jops]` shortcode: `[jops app="/jops-spa/src/App.js" id="jops-spa-root"]` embeds a JOPS app in a page, e.g. with Elementor's Shortcode widget or the block editor's Shortcode block. Attributes: `app`, `id`, `class`, `lib`. The plugin includes the jops-core library. One app per page; in the Elementor editor the widget shows a placeholder, and the app runs on the published page.
+- Install without npm: `jops-wordpress.zip` is attached to every GitHub release (always the newest: `https://github.com/uidb-dev/jops-core/releases/latest/download/jops-wordpress.zip`); install it with wp-admin → Plugins → Add New Plugin → Upload Plugin. To update, upload the newer zip and choose "Replace current with uploaded".
+- `npx jops-core init --wp` installs the plugin with npm: into `plugins/jops/` of a `wp-env` project (and adds it to `.wp-env.json`), otherwise into the plugins folder of the WordPress installation found in the current folder or above it (standard layout or Bedrock). `--wp-root <path>` points to WordPress instead of searching.
+- `npx jops-core update` also refreshes an installed JOPS WordPress plugin and its library.
+
+### New API
+
+- `View.removeSubViews(condition?)`: removes and destroys every subview, or only those matching `condition` (the others keep their order). Not available on a `Router` (logs a warning).
+
+### Fixes
+
+- The `jops:ready` event now fires after jops-core has fully initialised, so calling `mount()` from the listener no longer fails (it threw `Cannot set properties of undefined (setting 'pushState')` when the listener was registered before the library loaded).
+
 ## 1.1.1 — 2026-10-23
 
 Documentation only; no library changes.

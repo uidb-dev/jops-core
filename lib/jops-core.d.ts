@@ -275,6 +275,15 @@ export declare class View {
      */
     removeSubView(view: View): void;
     /**
+     * Removes subviews and destroys them, each through `removeSubView()`.
+     * With a condition, removes only the subviews it matches (the others keep
+     * their place and order).
+     * @param {(view: View) => boolean} [condition] - Which subviews to remove; all when omitted.
+     * @example
+     * this.removeSubViews((v) => v instanceof QuoteRow);
+     */
+    removeSubViews(condition?: (view: View) => boolean): void;
+    /**
      * Inserts `view` at `index` within `this.domNode` and runs its full lifecycle.
      * A removed (destroyed) view is final: create a new instance to show it again.
      * @param {View} view - The subview to insert.
@@ -486,6 +495,12 @@ export declare class Router extends View {
      * keeping the existing history state, and shows that route.
      */
     _switchToDefault(): void;
+    /**
+     * Not supported: a Router's subviews are its routes, and removing them
+     * would leave its route map pointing at destroyed views.
+     * @param {(view: View) => boolean} [condition]
+     */
+    removeSubViews(condition?: (view: View) => boolean): void;
     /**
      * Removes the history listeners, destroys the routes and stacked views and
      * clears the singleton. Called by `unmount()`; safe to call more than once.
