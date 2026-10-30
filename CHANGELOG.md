@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.1.3 — 2026-10-30
+
+Bug fixes in rendering declared views (layouts with several top-level elements, top-level `jops` tags, views in Router routes, nested tags, views added with `addSubView()`, views removed while loading) and in the Router hiding routes. No API changes.
 
 ### Fixes
 
@@ -8,6 +10,9 @@
 - A declared view (`<X jops …>`) or `<Router jops>` that is itself a top-level element of a layout is now rendered, e.g. a layout that starts with `<Header jops …></Header>` followed by other elements. Before, it was rendered only when wrapped in another element. The view that owns the layout keeps the rendered elements as its own, so `get()`, `find()`, `hide()` / `show()` and removing the view also cover them.
 - Views declared in the layout of a `Router` route are now rendered. Before, a route rendered only the plain HTML of its layout, and its `<X jops …>` tags (and those of the views inside it) stayed in the page as unrendered elements, with no error.
 - The `Router` now hides inactive routes and covered stacked views even when the app's CSS sets their `display` (e.g. `.stats { display: grid }`). It used only the `hidden` attribute, which such CSS overrides, so the previous route stayed visible next to the new one.
+- A declared view nested inside another declared view's tag (`<Outer jops><Inner jops></Inner></Outer>`) is now created once and belongs to the outer view. Before, both the outer view and the view containing it could create it, depending on load timing, so it was rendered twice or owned by the wrong view.
+- A view added with `addSubView()` or `insertSubView()` now renders the views declared in its layout (`<X jops …>` tags), before its `onLayout()`, as a declared view does. Before, only its plain HTML was shown and those tags stayed unrendered.
+- A view removed while its declared views are still loading now stops them: the ones that finish loading afterwards are destroyed instead of running `onLayout()` / `onResume()` and staying attached to the removed view.
 
 ## 1.1.2 — 2026-10-28
 

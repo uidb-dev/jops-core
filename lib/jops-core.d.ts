@@ -133,7 +133,7 @@ export declare class View {
     subViews: any[];
     layout: any;
     style: string;
-    domNodes: any[];
+    domNodes: any[] | HTMLElement[];
     domNode: any;
     _destroyed: boolean;
     _borrowedDomNode: boolean;
@@ -205,7 +205,8 @@ export declare class View {
     inflate(): void;
     /**
      * Appends `view` into the child element with `id="parentNode"` and runs its
-     * full lifecycle (`onLayout` → `onResume` → `bindEvents`).
+     * full lifecycle (`onLayout` → `onResume` → `bindEvents`). Renders the
+     * declared views (`jops` tags) in the view's layout before its `onLayout()`.
      * A removed (destroyed) view is final: create a new instance to show it again.
      * @param {string} parentNode - The `id` of the container element inside `this.domNode`.
      * @param {View} view - The subview to mount.
@@ -285,6 +286,8 @@ export declare class View {
     removeSubViews(condition?: (view: View) => boolean): void;
     /**
      * Inserts `view` at `index` within `this.domNode` and runs its full lifecycle.
+     * Renders the declared views (`jops` tags) in the view's layout before its
+     * `onLayout()`.
      * A removed (destroyed) view is final: create a new instance to show it again.
      * @param {View} view - The subview to insert.
      * @param {number} index - Zero-based insertion position.
