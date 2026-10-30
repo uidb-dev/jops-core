@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- Views declared in a layout with more than one top-level element are now rendered in every top-level element. Before, only the declared views (`<X jops …>` tags) inside the first top-level element were rendered; tags in the second and later elements stayed in the page as unrendered elements.
+- A declared view (`<X jops …>`) or `<Router jops>` that is itself a top-level element of a layout is now rendered, e.g. a layout that starts with `<Header jops …></Header>` followed by other elements. Before, it was rendered only when wrapped in another element. The view that owns the layout keeps the rendered elements as its own, so `get()`, `find()`, `hide()` / `show()` and removing the view also cover them.
+- Views declared in the layout of a `Router` route are now rendered. Before, a route rendered only the plain HTML of its layout, and its `<X jops …>` tags (and those of the views inside it) stayed in the page as unrendered elements, with no error.
+- The `Router` now hides inactive routes and covered stacked views even when the app's CSS sets their `display` (e.g. `.stats { display: grid }`). It used only the `hidden` attribute, which such CSS overrides, so the previous route stayed visible next to the new one.
+
 ## 1.1.2 — 2026-10-28
 
 WordPress integration: a JOPS SPA can now run inside a WordPress page, next to the theme and the page's other content, through the new JOPS WordPress plugin. See the new README section "WordPress Integration".
