@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.4 — 2026-11-03
+
+Maintenance release: fixes for Router transition glitches in app-like layouts, and documentation corrections. A Router without the new `screens` attribute behaves exactly as in 1.1.3.
+
+### Fixes
+
+- `Router` screens mode, an opt-in fix for layouts where the Router fills part of a fixed app window (desktop, hybrid, a fixed toolbar). With `<Router jops screens>`, the Router renders into its own container (`<div class="jops-router">`, sized by the app's CSS) instead of the tag's parent element. Every route and stacked view is a full-size screen in it that scrolls on its own and has an opaque background (`--jops-screen-bg`, default `Canvas`). This fixes, for such layouts: views shrinking during the `slide` and `fade` transitions, the previous view showing through the new one, the shared scroll position (Back now returns to where a list was scrolled), the transitions overwriting the parent element's inline styles, and views with several top-level elements switching without animation. A new view covers the current one, which stays alive underneath.
+
+### Docs
+
+- README and AI guide: new "Screens mode" section in the Router docs; removed the outdated rule that a route's own layout (and the layout of a view added with `addSubView()`) is not scanned for declared views, which no longer applies since 1.1.3.
+
 ## 1.1.3 — 2026-10-30
 
 Bug fixes in rendering declared views (layouts with several top-level elements, top-level `jops` tags, views in Router routes, nested tags, views added with `addSubView()`, views removed while loading) and in the Router hiding routes. No API changes.

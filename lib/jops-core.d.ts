@@ -437,6 +437,18 @@ export declare class Store {
  * - **Flat** (`href="#path"`) — reuses pre-existing view instances (tab navigation).
  * - **Stack** (`navigate()`) — creates a new instance and pushes onto a nav stack (Android `startActivity`).
  *
+ * **Screens mode** (`<Router jops screens>`): the Router renders into its own
+ * container, `<div class="jops-router">` (with the tag's `id` and `class`),
+ * styled `position: relative; overflow: hidden`; the app's CSS gives it its
+ * size (e.g. `flex: 1; min-height: 0` in a flex column). Each route and each
+ * stacked view is wrapped in a `<div class="jops-screen">` that fills the
+ * container (`position: absolute; inset: 0`), scrolls on its own and has an
+ * opaque background (`--jops-screen-bg`, default `Canvas`). A new view covers
+ * the current one, which stays alive underneath (`visibility: hidden` and
+ * `inert` once the transition has ended, so it keeps its scroll position).
+ * Views with several root elements animate too. Without `screens`, routes
+ * are placed in the Router tag's parent element (the default).
+ *
  * @example
  * // In a layout file:
  * layout`
@@ -451,6 +463,8 @@ export declare class Router extends View {
     rootNode: any;
     routerDomNode: any;
     animation: any;
+    /** Screens mode (`<Router jops screens>`), see the class description. @type {boolean} */
+    screens: boolean;
     routes: {};
     _navStack: any[];
     _baseView: any;
@@ -465,6 +479,25 @@ export declare class Router extends View {
      */
     static singleton(): Router;
     constructor(routerDomNode: any);
+    /**
+     * Shows or hides a route or stacked view: its screen in screens mode,
+     * otherwise its own root elements.
+     * @param {View} view
+     * @param {boolean} visible
+     */
+    _setVisible(view: View, visible: boolean): void;
+    /**
+     * Adds a view created by navigate() or replace() to the page: in screens
+     * mode in a new screen at the top of the container (hidden until it is
+     * shown), otherwise next to the routes.
+     * @param {View} view
+     */
+    _place(view: View): void;
+    /**
+     * Destroys a stacked or replace() view, and its screen in screens mode.
+     * @param {View} view
+     */
+    _destroyView(view: View): void;
     onLayout(): Promise<void>;
     /**
      * Routes only get their events bound while the Router renders; `onResume()`
@@ -517,6 +550,15 @@ export declare class Router extends View {
      */
     _onHostNavigation(): void;
     _animateTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
+    /**
+     * Screens mode: the upper screen (the new one forward, the leaving one on
+     * Back) slides or fades over the lower one, which stays visible during the
+     * transition; afterwards only the front screen is visible.
+     * @param {View} outgoing
+     * @param {View} incoming
+     * @param {boolean} isForward
+     */
+    _screenTransition(outgoing: View, incoming: View, isForward: boolean): Promise<void>;
     _slideTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
     _fadeTransition(outgoing: any, incoming: any): Promise<void>;
     _switchTo(path: any): void;

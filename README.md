@@ -615,7 +615,7 @@ export default class Card extends View {
 - `jops`, `type="jops"`, `src`, `layout`, `path` and `jops-event-bind` belong to JOPS and are not props. `id`, `class` and `on*` attributes are props only: they are not copied to the view's element, and an `onclick` prop is not bound.
 - The view's constructor needs no parameters for this: props reach declared views whatever their constructor looks like.
 - A view created in code can get props through the constructor: `new View(layout, { title: "Hi" })`, or `super(undefined, props)` in a subclass.
-- Props come from tags in static layouts processed by `render()`: the root layout, the Router's route declarations, and the layouts of declared views. Tags inside the layout of a view added with `addSubView()`, or inside a route's own layout, are not created as views; add those children in code.
+- Props come from the tags of declared views (`<X jops …>`) in any layout JOPS renders: the root layout, the Router's route declarations, a route's own layout, the layouts of declared views and of views added with `addSubView()` / `insertSubView()`.
 
 #### Layouts with several top-level elements
 
@@ -626,7 +626,7 @@ A layout may have one or more top-level elements:
 <table><tbody id="rows"></tbody></table>
 ```
 
-`this.domNode` is the first one and `this.domNodes` holds all of them. `get()`, `find(id)`, `bindEvents()`, `show()`, `hide()`, `addSubView()`, `insertSubView()` and `destroy()` act on all of them, in order. Top-level text is ignored. The Router's `slide` and `fade` animations need single-root views: a stacked view with several top-level elements switches instantly.
+`this.domNode` is the first one and `this.domNodes` holds all of them. `get()`, `find(id)`, `bindEvents()`, `show()`, `hide()`, `addSubView()`, `insertSubView()` and `destroy()` act on all of them, in order. Top-level text is ignored. The Router's `slide` and `fade` animations need single-root views: a stacked view with several top-level elements switches instantly, except in the Router's screens mode, which animates them too.
 
 #### Declarative Event Binding
 
@@ -814,7 +814,7 @@ Hash-based SPA router. Singleton. Declared in the layout as `<Router jops animat
 
 - The first route declared in `<Router>` is the default: it is shown on startup when the URL has no known route hash, and whenever the hash becomes empty (`href="#"`, a link to the page itself).
 - Each route is resumed only when it is shown; at startup only the selected route gets `onResume()`. Every route gets `onLayout()` at startup.
-- **Screen rule:** put screen views in `<Router>`. A route's own layout is not scanned for declared views, so a screen adds its child views in code with `addSubView()`.
+- A route's own layout may declare views (`<X jops …>`), like any other layout; they are rendered with the route.
 
 #### Animation
 
@@ -826,7 +826,25 @@ Set via the `animation` attribute on the `<Router>` element:
 | `"slide"`          | Forward: incoming slides in from right. Back: outgoing slides out to right |
 | `"fade"`           | Crossfade between outgoing and incoming                                    |
 
-Animation only occurs on `navigate()` (forward) and `back()` when the nav stack is non-empty. Flat tab switching is always instant, and so is a transition involving a view whose layout has several top-level elements.
+Animation only occurs on `navigate()` (forward) and `back()` when the nav stack is non-empty. Flat tab switching is always instant, and so is a transition involving a view whose layout has several top-level elements (except in screens mode, below).
+
+#### Screens mode
+
+Add the `screens` attribute to give the Router a container of its own, with every route and stacked view as a full-size screen in it, as in a native app:
+
+```html
+<Router jops screens animation="slide" class="content">
+  <Home  jops path="/home"  src="/src/Home.js"></Home>
+  <Files jops path="/files" src="/src/Files.js"></Files>
+</Router>
+```
+
+- The `<Router>` tag is replaced by `<div class="jops-router">` (plus the tag's own `id` and `class`), styled `position: relative; overflow: hidden`. Its routes are placed inside it, not in the tag's parent element.
+- **Give the container its size in your CSS**, e.g. fill the rest of a flex column: `.jops-router { flex: 1; min-height: 0; }`. Without a height it has none, and nothing is visible.
+- Each route and each view opened with `navigate()` or `replace()` is wrapped in a `<div class="jops-screen">` that fills the container (`position: absolute; inset: 0`), **scrolls on its own** (`overflow: auto`) and has an opaque background. Set the background with the `--jops-screen-bg` CSS variable (default `Canvas`, the browser's page colour in light and dark mode): `.jops-router { --jops-screen-bg: var(--bg); }`.
+- A new view **covers** the current one, which stays alive underneath. During the transition both are visible; afterwards the covered screen is `visibility: hidden` and `inert` (not painted, not focusable), so it keeps its scroll position and is shown again unchanged on Back. Inactive flat routes are hidden the same way.
+- `slide` and `fade` move only the upper screen (the new one forward, the leaving one on Back), and also work for views with several top-level elements.
+- Without `screens` (the default), routes are placed in the parent element and scroll with the page, as before.
 
 #### Layout Declaration
 
