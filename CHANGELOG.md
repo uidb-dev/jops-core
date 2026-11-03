@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.5 — 2026-11-03
+
+Documentation only, no code changes.
+
+### Docs
+
+- README and AI guide, Router screens mode: how to style screens and the Router container through the `.jops-screen` and `.jops-router` classes (e.g. padding inside every screen), and which properties the Router sets inline and therefore take precedence over app CSS (`position`, `inset`, `overflow` and `background` on screens; `position` and `overflow` on the container). Use `--jops-screen-bg` for the screen background.
+
 ## 1.1.4 — 2026-11-03
 
 Maintenance release: fixes for Router transition glitches in app-like layouts, and documentation corrections. A Router without the new `screens` attribute behaves exactly as in 1.1.3.
