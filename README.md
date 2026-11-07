@@ -56,9 +56,9 @@ The fastest way to get started. Add these two tags to any HTML page:
 
 The import map lets your app modules use `import { View } from "jops-core"`. The module script tag bootstraps the app entry point specified in `data-app`.
 
-`App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it.
+`App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it; without `data-app`, JOPS loads `./src/App.js`.
 
-Replace `@latest` with a specific version (e.g. `@1.1.2`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.1.8`) to pin. No build step, no npm, no bundler.
 
 By default the app renders into `<body>`. To render it into an element instead (keeping the rest of the page), add `data-root` with the element's id:
 
@@ -67,7 +67,7 @@ By default the app renders into `<body>`. To render it into an element instead (
 <script type="module" src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js" data-app="./src/App.js" data-root="app"></script>
 ```
 
-> **Note:** ES modules require an HTTP server — open your project with `npx serve` (or any static server) rather than double-clicking `index.html`. Browsers block `import` on `file://` URLs.
+> **Note:** ES modules require an HTTP server — open your project with `npx serve` (or any static server) rather than double-clicking `index.html`. Browsers block `import` on `file://` URLs. (Electron is the exception: see [Paths under `file://`](#paths-under-file).)
 
 For editor autocomplete and inline docs without installing the full package, add jops-core as a dev dependency:
 
@@ -87,7 +87,7 @@ npm install jops-core
 npx jops-core init
 ```
 
-`npx jops-core init` vendors the library to `/lib/jops-core.min.js`, configures `index.html` with the import map, and injects build and postinstall scripts into `package.json`. It first asks which template to start from:
+`npx jops-core init` vendors the library to `/lib/jops-core.min.js`, configures `index.html` with the import map, and adds `build` and `postinstall` scripts to `package.json` (`"postinstall": "jops-core update"` refreshes `lib/` after every `npm install`). It first asks which template to start from:
 
 | Choice | Template |
 | --- | --- |
@@ -201,9 +201,10 @@ npx jops-core init
 | `<script src="cordova.js">` | — | ✓ | — |
 | iOS custom scheme in `config.xml` | — | ✓ (`app://localhost`) | — (Capacitor uses `capacitor://localhost`) |
 | `"build"` script in `package.json` | ✓ | — (use `cordova build`) | — (use `npx cap sync`) |
-| `"postinstall": "npx jops-core init"` | ✓ | ✓ | ✓ |
+| `"postinstall": "jops-core update"` | ✓ | ✓ | ✓ |
 
-- Every step checks first, so running `init` again — including through `postinstall` — never duplicates anything.
+- Every step checks first, so running `init` again never duplicates anything.
+- **Projects created before 1.1.8** have `"postinstall": "npx jops-core init"`. `init` asks which template to use, so `npm install` shows that question; since 1.1.8, when nobody can answer it (CI, Docker) `init` uses 5 (None), which only refreshes the library. Before 1.1.8, `npm install` failed there. Changing the script to `"postinstall": "jops-core update"` avoids the question.
 - **Cordova's sample page:** when you pick the *Empty* or *Hello World* template and `www/index.html` is still the page created by `cordova create`, `init` renames it to `www/index.cordova.html` and writes a JOPS `index.html` instead (the sample's `js/index.js` expects markup that a JOPS app replaces). No files are deleted; `css/`, `img/` and `js/` from the sample can be removed by hand.
 - **iOS scheme (Cordova):** JOPS loads `App.js`, views and layouts with native `import()` and `fetch()`, which WebViews block on `file://` pages. Cordova Android and Capacitor already serve from `https://localhost`; for Cordova iOS, `init` adds the following to `config.xml` (applied on the next `cordova prepare` / `build` / `run`):
 
@@ -265,6 +266,8 @@ Capacitor's Cordova compatibility layer fires `deviceready` and forwards JOPS's 
 To handle back yourself in Capacitor, opt out with `data-native-back="off"` and use the plugin's global (no bundler needed):
 
 ```js
+import { Router } from "jops-core";
+
 const { App } = window.Capacitor.Plugins;
 
 App.addListener("backButton", () => {
@@ -698,7 +701,7 @@ Optional hooks, called by the Router:
 | `find(id)`                      | Returns an array of `Element` wrappers for every element with the given `id` across the layout (sub-views' DOM included), in page order |
 | `find(condition)`               | Depth-first search across full subview subtree; returns flat array of all views matching the predicate         |
 | `props`                         | The view's read-only [input props](#tag-props-input-properties)                                                 |
-| `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped. No effect when the app runs inside Next.js (the host owns the CSS) |
+| `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped. No effect in hosted mode (Next.js, WordPress, `mount()`): the host page owns the CSS |
 | `addSubView(containerId, view)` | Appends `view` into the element with `id="containerId"` (looked up like `get()`: in any top-level element of the layout, or a top-level element itself), runs its full lifecycle |
 | `insertSubView(view, index)`    | Inserts `view` at position `index` among the children of `this.domNode` (the first top-level element), runs its full lifecycle |
 | `removeSubView(view)`           | Removes `view` from DOM and `this.subViews`, calls `view.destroy()`                                            |
@@ -878,7 +881,7 @@ The framework waits for the promise returned by `loadLayout()` before calling `i
 </div>
 ```
 
-> **Note:** `.html` layouts are fetched at runtime and cached in memory — identical dedup behaviour to the browser's module cache for `.js` layouts. Each unique path is fetched once per page load.
+> **Note:** `.html` layouts are fetched at runtime and cached in memory for the page's lifetime; `.js` layouts are cached by the browser's module cache. Once a path has loaded, later views use the cached copy. Views that load the same path at the same moment (for example rows added in a loop) may each fetch it once.
 
 `loadLayout()` loads **once per view**: calls made while a load is in progress (with or without a path) wait for it, and once a layout is loaded, later calls return at once. A failed load (for example a 404) leaves the view without a layout, so it can be retried. This also makes `new View("/path/to/layout.html")` followed by `addSubView()` work: `addSubView()` waits for the layout the constructor started loading.
 
@@ -990,7 +993,7 @@ Add the `screens` attribute to give the Router a container of its own, with ever
 // dynamic navigation with params
 Router.singleton().navigate("/detail?id=42&mode=edit", DetailView);
 
-// read params in any view's onResume()
+// read params in the target view's onResume() (a stacked navigate() view can also read them in onLayout())
 const { id, mode } = Router.singleton().getParams();
 ```
 

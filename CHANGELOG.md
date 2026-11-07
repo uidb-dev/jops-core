@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.1.8 — 2026-11-07
+
+Fixes for `npm install` in projects created with `npx jops-core init`, more complete type definitions, and documentation corrections. The library only adds the `Element` export; its behaviour is unchanged.
+
+### Fixes
+
+- `npm install` failed where nobody can answer a question (CI, Docker) in web, Cordova and Capacitor projects created by `npx jops-core init`: their `"postinstall": "npx jops-core init"` stopped at the template question and exited with an error. When input ends without an answer, `init` now uses 5 (None), which only refreshes the library and adds what is missing. A piped answer (`echo 2 | npx jops-core init`) still works.
+- `init` now adds `"postinstall": "jops-core update"`, which only copies the library. Existing projects keep their script; changing it to `jops-core update` avoids the question.
+- Hello World template: the stylesheet was loaded twice (by `setStyle()` and by a `<link>` in the layout); the layout's `<link>` is removed. `Media.js` is referenced with a root-based path like the other views.
+
+### Types
+
+- `Element` (returned by `get()` and `find(id)`) is exported, so it can be used in your own type annotations.
+- `View` declares the optional lifecycle hooks `onLayout()`, `onResume()`, `onPause()` and `onBackPressed()`, so editors suggest and document them in subclasses.
+- Internal members (names starting with `_`) are no longer part of the type definitions.
+- `hide()`, `show()`, `destroy()` and `inflate()` describe their behaviour for layouts with several top-level elements.
+
+### Docs
+
+- README: `setStyle()` has no effect in any hosted mode (Next.js, WordPress, `mount()`), not only in Next.js; the default entry point when `data-app` is missing (`./src/App.js`); the Electron exception to the `file://` note; how the layout cache handles views loading the same file at the same moment; where to read route params; the missing `import { Router }` in the Capacitor back-button example; the pin example uses the current version.
+- AI guide: written against 1.1.8; the same `setStyle()` and `postinstall` corrections.
+
 ## 1.1.7 — 2026-11-07
 
 Bug fix in `addSubView()`. Calls that worked before find the same container.

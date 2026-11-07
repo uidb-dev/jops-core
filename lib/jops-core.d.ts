@@ -54,7 +54,7 @@ export declare function layout(strings: TemplateStringsArray, ...values: any[]):
  * DOM accessor returned by {@link View.get}.
  * Wraps a single child element for reading and writing.
  */
-declare class Element {
+export declare class Element {
     #private;
     id: string;
     inert: boolean;
@@ -129,14 +129,11 @@ declare class Element {
  */
 export declare class View {
     #private;
-    _generation: number;
     subViews: any[];
     layout: any;
     style: string;
     domNodes: any[] | HTMLElement[];
     domNode: any;
-    _destroyed: boolean;
-    _borrowedDomNode: boolean;
     /**
      * @param {string} [layout] - Optional layout path or inline HTML string.
      * @param {Record<string, string>} [props] - Input properties. A view declared
@@ -144,6 +141,27 @@ export declare class View {
      *   attributes automatically; a view created in code may pass them here.
      */
     constructor(layout?: string, props?: Record<string, string>);
+    /**
+     * Lifecycle hook (optional): the layout is in the DOM. Runs once per view,
+     * after its declared views are rendered. Read initial data and wire DOM here.
+     */
+    onLayout?(): void | Promise<void>;
+    /**
+     * Lifecycle hook (optional): the view comes to the front: on first display,
+     * on every return navigation, and when the same route is shown again with
+     * new parameters. A Router route is resumed only when it is shown.
+     */
+    onResume?(): void | Promise<void>;
+    /**
+     * Lifecycle hook (optional, Router): another view comes to the front and
+     * this one stays alive. Not called when the view is destroyed.
+     */
+    onPause?(): void;
+    /**
+     * Lifecycle hook (optional, Router): Back was pressed while this view is in
+     * front, before the Router navigates back.
+     */
+    onBackPressed?(): void;
     /**
      * The view's input properties (read-only): the attributes of its declared
      * jops tag (except `jops`, `type="jops"`, `src`, `layout`, `path`,
@@ -180,26 +198,14 @@ export declare class View {
      */
     get(id: string): Element;
     /**
-     * The view's root elements: every top-level element of its layout (a layout
-     * may have more than one), or the borrowed container of a root view.
-     * @returns {HTMLElement[]}
-     * @protected
-     */
-    protected _roots(): HTMLElement[];
-    /**
-     * Hides or shows every root element (used by the Router).
-     * @param {boolean} hidden
-     * @protected
-     */
-    protected _setHidden(hidden: boolean): void;
-    /**
      * Wires `on*` HTML attributes on `[jops-event-bind]` elements to
      * same-named methods on this view instance.
      * Called automatically after `onResume()`. Override to add custom wiring.
      */
     bindEvents(): void;
     /**
-     * Parses `this.layout` into a DOM node and assigns it to `this.domNode`.
+     * Parses `this.layout` into DOM elements: `this.domNodes` holds every
+     * top-level element and `this.domNode` the first one.
      * Idempotent — safe to call multiple times.
      */
     inflate(): void;
@@ -216,11 +222,13 @@ export declare class View {
      */
     addSubView(containerId: string, view: View): Promise<void>;
     /**
-     * Sets `this.domNode` to `display: none`.
+     * Hides the view: sets `display: none` on every top-level element of its
+     * layout. Visual only: no lifecycle method is called.
      */
     hide(): void;
     /**
-     * Removes the inline `display` override, restoring `this.domNode` visibility.
+     * Shows the view again: removes the inline `display` override from every
+     * top-level element of its layout. Visual only: no lifecycle method is called.
      */
     show(): void;
     /**
@@ -269,7 +277,9 @@ export declare class View {
     find(condition: (view: View) => boolean): View[];
     /**
      * Recursively destroys the subview subtree: calls `destroy()` on all
-     * subviews, removes `this.domNode` from the DOM, and nulls references.
+     * subviews, removes the view's owned `EventBus` subscriptions, removes every
+     * top-level element of its layout from the DOM (a root view's container is
+     * emptied instead), and nulls references. A destroyed view is final.
      */
     destroy(): void;
     /**
@@ -297,15 +307,6 @@ export declare class View {
      * @returns {Promise<void>}
      */
     insertSubView(view: View, index: number): Promise<void>;
-    /**
-     * Final lifecycle steps for a sub-view declared in this view's layout,
-     * called by `render()` after its `onLayout()`. Router overrides it so a
-     * route is resumed only when it is shown.
-     * @param {View} subView
-     * @returns {Promise<void>}
-     * @protected
-     */
-    protected _startSubView(subView: View): Promise<void>;
     /**
      * Mounts the view to the DOM, resolves all nested `[jops]` view
      * elements and `<Router>` declarations, and runs each one's full lifecycle.
@@ -408,7 +409,6 @@ export declare class EventBus {
  */
 export declare class Store {
     #private;
-    _state: {};
     /**
      * Returns the single Store instance, creating it on first call.
      * @returns {Store}
@@ -469,71 +469,15 @@ export declare class Router extends View {
     /** Screens mode (`<Router jops screens>`), see the class description. @type {boolean} */
     screens: boolean;
     routes: {};
-    _navStack: any[];
-    _baseView: any;
-    _defaultPath: string;
-    _pathname: string;
-    _idx: any;
-    _historyListener: () => void;
-    _currentView: any;
     /**
      * Returns the single Router instance after it has been rendered.
      * @returns {Router}
      */
     static singleton(): Router;
     constructor(routerDomNode: any);
-    /**
-     * Shows or hides a route or stacked view: its screen in screens mode,
-     * otherwise its own root elements.
-     * @param {View} view
-     * @param {boolean} visible
-     */
-    _setVisible(view: View, visible: boolean): void;
-    /**
-     * Adds a view created by navigate() or replace() to the page: in screens
-     * mode in a new screen at the top of the container (hidden until it is
-     * shown), otherwise next to the routes.
-     * @param {View} view
-     */
-    _place(view: View): void;
-    /**
-     * Destroys a stacked or replace() view, and its screen in screens mode.
-     * @param {View} view
-     */
-    _destroyView(view: View): void;
     onLayout(): Promise<void>;
-    /**
-     * Routes only get their events bound while the Router renders; `onResume()`
-     * runs when a route is shown (`_switchTo()` and the transitions), so hidden
-     * routes are not resumed at startup.
-     * @param {View} subView
-     * @returns {Promise<void>}
-     * @protected
-     */
-    protected _startSubView(subView: View): Promise<void>;
     initRouter(): void;
-    /**
-     * Single entry point for popstate and hashchange. Decides the direction
-     * from the history entry's position and dispatches to _onBack/_onForward.
-     */
-    _onHistoryChange(): void;
-    _onBack(): void;
-    _onForward(): void;
     /** Destroys every stacked navigate() view (switching to a flat route). */
-    _closeStack(): void;
-    /**
-     * onPause() on the view leaving the front: a different view is coming to
-     * the front and the current one stays alive (hidden or covered). Not used
-     * when a view is destroyed (stack pop on Back, _closeStack(), unmount()).
-     * @param {View} incoming
-     */
-    _pauseCurrent(incoming: View): void;
-    _switchToHash(): void;
-    /**
-     * Replaces the current entry's empty hash with the default (first) route,
-     * keeping the existing history state, and shows that route.
-     */
-    _switchToDefault(): void;
     /**
      * Not supported: a Router's subviews are its routes, and removing them
      * would leave its route map pointing at destroyed views.
@@ -546,25 +490,6 @@ export declare class Router extends View {
      */
     destroy(): void;
     /** pushState/replaceState marked as JOPS's own (see installHostHistoryHook). */
-    _history(method: any, state: any, url: any): void;
-    /**
-     * Hosted mode: called after the host changed the URL with pushState or
-     * replaceState (no browser event fires for those).
-     */
-    _onHostNavigation(): void;
-    _animateTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
-    /**
-     * Screens mode: the upper screen (the new one forward, the leaving one on
-     * Back) slides or fades over the lower one, which stays visible during the
-     * transition; afterwards only the front screen is visible.
-     * @param {View} outgoing
-     * @param {View} incoming
-     * @param {boolean} isForward
-     */
-    _screenTransition(outgoing: View, incoming: View, isForward: boolean): Promise<void>;
-    _slideTransition(outgoing: any, incoming: any, direction: any): Promise<void>;
-    _fadeTransition(outgoing: any, incoming: any): Promise<void>;
-    _switchTo(path: any): void;
     /**
      * Navigates back — pops the nav stack with animation if non-empty,
      * otherwise calls `history.back()`.
