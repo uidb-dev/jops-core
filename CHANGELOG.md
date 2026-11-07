@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.9 — 2026-11-07
+
+Documentation only. The library is identical to 1.1.8.
+
+### Docs
+
+- `Store` is described as an app-wide shared data store instead of a state container, since it stores data and has no reactivity: README heading "`Store` — Shared Data Store", AI guide heading "Shared data and events: `Store` and `EventBus`", and the `Store` description in the type definitions.
+
 ## 1.1.8 — 2026-11-07
 
 Fixes for `npm install` in projects created with `npx jops-core init`, more complete type definitions, and documentation corrections. The library only adds the `Element` export; its behaviour is unchanged.

@@ -999,9 +999,9 @@ const { id, mode } = Router.singleton().getParams();
 
 ---
 
-### `Store` — Singleton State Container
+### `Store` — Shared Data Store
 
-App-wide runtime state. No reactivity — a plain shared key-value store with dot-notation path access. Views read from Store in `onResume()` and write in event handlers.
+App-wide shared data. No reactivity — a plain shared key-value store with dot-notation path access. Views read from Store in `onResume()` and write in event handlers.
 
 ```js
 import { Store } from "jops-core";

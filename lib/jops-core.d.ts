@@ -399,7 +399,7 @@ export declare class EventBus {
     static clear(): void;
 }
 /**
- * App-wide runtime state container. Singleton. No reactivity.
+ * App-wide shared data store. Singleton. No reactivity.
  * Views read in `onResume()` and write in event handlers.
  *
  * @example
