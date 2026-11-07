@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.7 — 2026-11-07
+
+Bug fix in `addSubView()`. Calls that worked before find the same container.
+
+### Fixes
+
+- `addSubView(containerId, view)` now finds its container the same way as `get()`: in every top-level element of the view's layout, in order, and the container may be a top-level element itself. Before, only the inside of the first top-level element was searched, so a container in a later top-level element (e.g. `<h2>…</h2><table><tbody id="rows">`) or a top-level container logged "no element #… in the view" and nothing was added.
+- `addSubView()` with a container id that is not a valid CSS identifier (for example one starting with a digit) no longer throws a `SyntaxError`.
+
+### Docs
+
+- README, AI guide and type definitions: the `addSubView()` container lookup; `insertSubView()` inserts among the children of the first top-level element. The `addSubView()` parameter is named `containerId` in the type definitions, as in the README.
+
 ## 1.1.6 — 2026-11-07
 
 Electron support in the CLI: a new Electron template, and `init` / `update` recognise Electron projects. The library is unchanged from 1.1.5.

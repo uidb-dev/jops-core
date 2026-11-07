@@ -699,8 +699,8 @@ Optional hooks, called by the Router:
 | `find(condition)`               | Depth-first search across full subview subtree; returns flat array of all views matching the predicate         |
 | `props`                         | The view's read-only [input props](#tag-props-input-properties)                                                 |
 | `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped. No effect when the app runs inside Next.js (the host owns the CSS) |
-| `addSubView(containerId, view)` | Appends `view` into the child element with `id="containerId"`, runs its full lifecycle                         |
-| `insertSubView(view, index)`    | Inserts `view` at position `index` within `this.domNode`, runs its full lifecycle                              |
+| `addSubView(containerId, view)` | Appends `view` into the element with `id="containerId"` (looked up like `get()`: in any top-level element of the layout, or a top-level element itself), runs its full lifecycle |
+| `insertSubView(view, index)`    | Inserts `view` at position `index` among the children of `this.domNode` (the first top-level element), runs its full lifecycle |
 | `removeSubView(view)`           | Removes `view` from DOM and `this.subViews`, calls `view.destroy()`                                            |
 | `removeSubViews(condition?)`    | Removes every subview with `removeSubView()`, or only those matching `condition` (the others keep their order). Direct subviews only; not available on a `Router` (logs a warning) |
 | `show()`                        | Shows the view again (removes the inline `display` override)                                                   |
@@ -749,7 +749,7 @@ A layout may have one or more top-level elements:
 <table><tbody id="rows"></tbody></table>
 ```
 
-`this.domNode` is the first one and `this.domNodes` holds all of them. `get()`, `find(id)`, `bindEvents()`, `show()`, `hide()`, `addSubView()`, `insertSubView()` and `destroy()` act on all of them, in order. Top-level text is ignored. The Router's `slide` and `fade` animations need single-root views: a stacked view with several top-level elements switches instantly, except in the Router's screens mode, which animates them too.
+`this.domNode` is the first one and `this.domNodes` holds all of them. `get()`, `find(id)`, `addSubView()` (the container lookup), `bindEvents()`, `show()`, `hide()` and `destroy()` act on all of them, in order; `insertSubView()` inserts among the children of the first one. A view added with `addSubView()` or `insertSubView()` has all of its own top-level elements placed, in order. Top-level text is ignored. The Router's `slide` and `fade` animations need single-root views: a stacked view with several top-level elements switches instantly, except in the Router's screens mode, which animates them too.
 
 #### Declarative Event Binding
 

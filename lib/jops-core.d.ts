@@ -204,15 +204,17 @@ export declare class View {
      */
     inflate(): void;
     /**
-     * Appends `view` into the child element with `id="parentNode"` and runs its
+     * Appends `view` into the element with `id="containerId"` and runs its
      * full lifecycle (`onLayout` → `onResume` → `bindEvents`). Renders the
      * declared views (`jops` tags) in the view's layout before its `onLayout()`.
+     * The container is looked up like `get()`: in every top-level element of this
+     * view's layout, in order (a top-level element may be the container itself).
      * A removed (destroyed) view is final: create a new instance to show it again.
-     * @param {string} parentNode - The `id` of the container element inside `this.domNode`.
+     * @param {string} containerId - The `id` of the container element in this view's layout.
      * @param {View} view - The subview to mount.
      * @returns {Promise<void>}
      */
-    addSubView(parentNode: string, view: View): Promise<void>;
+    addSubView(containerId: string, view: View): Promise<void>;
     /**
      * Sets `this.domNode` to `display: none`.
      */
@@ -285,7 +287,8 @@ export declare class View {
      */
     removeSubViews(condition?: (view: View) => boolean): void;
     /**
-     * Inserts `view` at `index` within `this.domNode` and runs its full lifecycle.
+     * Inserts `view` at `index` among the children of `this.domNode` (the first
+     * top-level element of this view's layout) and runs its full lifecycle.
      * Renders the declared views (`jops` tags) in the view's layout before its
      * `onLayout()`.
      * A removed (destroyed) view is final: create a new instance to show it again.
