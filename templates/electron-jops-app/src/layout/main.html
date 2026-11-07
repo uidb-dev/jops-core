@@ -1,0 +1,12 @@
+<div class="app">
+  <nav class="sidebar">
+    <div class="brand">JOPS · Electron</div>
+    <a class="nav-link" href="#home">Home</a>
+    <a class="nav-link" href="#files">Files</a>
+  </nav>
+
+  <Router jops screens class="content">
+    <HomeView jops src="HomeView.js" layout="layout/home_view.html" path="/home"></HomeView>
+    <FilesView jops src="FilesView.js" layout="layout/files_view.html" path="/files"></FilesView>
+  </Router>
+</div>

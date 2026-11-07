@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.6 — 2026-11-07
+
+Electron support in the CLI: a new Electron template, and `init` / `update` recognise Electron projects. The library is unchanged from 1.1.5.
+
+### New
+
+- `npx jops-core init` template **4. Electron JOPS Desktop App**: creates an Electron Forge project in the current folder (main process, preload bridge with two sample IPC calls, a JOPS SPA with a sidebar and `<Router jops screens>`, a Content-Security-Policy), vendors the library to `src/lib/` and runs `npm install`. An existing `package.json` is merged (its entries are kept; `jops-core` goes to `devDependencies`). "None" is now choice 5.
+- `init` in an existing Electron project (Electron Forge's default template, or any project with `electron` in `package.json` that loads a plain HTML page): vendors the library into the page's folder (`src/lib/`), replaces Forge's sample page (kept as `index.forge.html`) or patches your own with the import map, the module script and a Content-Security-Policy, copies templates 1 and 2 next to `index.html` with page-relative paths, moves `jops-core` to `devDependencies` and adds a `jops:update` script. Forge's vite and webpack templates are refused, since they bundle the page. `--electron` forces the project type.
+- `npx jops-core update` refreshes the library in an Electron project; `npx jops-core build` points to `npm run make` there.
+
+### Docs
+
+- README: new section "Desktop Apps (Electron)": the template, adding JOPS to an existing Electron project, paths under `file://` (page-relative, no leading `./` or `/`), calling the main process through the preload bridge, events from the main process, the Content-Security-Policy, conventions. CLI and init menu updated.
+- AI guide: Electron section, and the path rule per setup gets an Electron line.
+
 ## 1.1.5 — 2026-11-03
 
 Documentation only, no code changes.

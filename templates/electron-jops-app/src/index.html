@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Only the app's own files; 'unsafe-inline' for the import map and the on*
+         attributes that JOPS binds, blob: for Thread workers. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+    <title>Electron JOPS App</title>
+    <script type="importmap">
+      { "imports": { "jops-core": "./lib/jops-core.min.js" } }
+    </script>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <script type="module" src="lib/jops-core.min.js" data-app="App.js"></script>
+  </body>
+</html>

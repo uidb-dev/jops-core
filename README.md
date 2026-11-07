@@ -19,9 +19,11 @@ No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
 | Angular   | ❌            | ✅          | ✅                       | ✅                             |
 | Svelte    | ❌ (compiler) | ✅          | ✅                       | ✅                             |
 
-**Target audience:** Teams building internal tools, dashboards, embedded WebViews, or native mobile hybrid apps who want a structured, class-based frontend architecture without the npm/webpack/babel ecosystem overhead.
+**Target audience:** Teams building internal tools, dashboards, embedded WebViews, native mobile hybrid apps, or desktop apps who want a structured, class-based frontend architecture without the npm/webpack/babel ecosystem overhead.
 
 **Next.js teams:** a JOPS SPA can also run inside a Next.js page, next to React, with Next.js as its backend. See [Next.js Integration](#nextjs-integration).
+
+**Desktop apps:** a JOPS SPA can be the UI of an Electron app on macOS, Windows and Linux, with no bundler. See [Desktop Apps (Electron)](#desktop-apps-electron).
 
 **WordPress sites:** a JOPS SPA can run inside a WordPress page (Elementor or the block editor) through the JOPS plugin and its `[jops]` shortcode. See [WordPress Integration](#wordpress-integration).
 
@@ -92,7 +94,8 @@ npx jops-core init
 | 1 | Empty JOPS project: the basic skeleton of a JOPS app |
 | 2 | Hello World JOPS project: an example app using every feature |
 | 3 | Next.js JOPS Embedded SPA: a Next.js project hosting a JOPS SPA (see [Next.js Integration](#nextjs-integration)) |
-| 4 | None: only the library, `index.html` and scripts |
+| 4 | Electron JOPS Desktop App: an Electron Forge project whose UI is a JOPS SPA (see [Desktop Apps (Electron)](#desktop-apps-electron)) |
+| 5 | None: only the library, `index.html` and scripts |
 
 ### Updating the library
 
@@ -292,6 +295,126 @@ The Hello World template already does this.
 - **iOS:** Safari → Develop → *Simulator* → your app.
 
 A `cordova_plugins.js` "not found" error in the console is expected when the project has no Cordova plugins installed; it is harmless.
+
+---
+
+## Desktop Apps (Electron)
+
+A JOPS SPA can be the UI (renderer process) of an [Electron](https://www.electronjs.org/) app. The page is loaded from disk with `loadFile()`, JOPS and the app's files are packaged as they are (no bundler), and the views reach the operating system through Electron's preload bridge. Tested with Electron 45 and Electron Forge 8 on macOS and Windows.
+
+### Quick start: the Electron template
+
+In an empty folder (or a fresh npm project):
+
+```bash
+npx jops-core init
+```
+
+and pick **4. Electron JOPS Desktop App**. `init` writes an Electron Forge project into the current folder, merges its dependencies and scripts into an existing `package.json` (existing entries are kept), vendors the library and runs `npm install`. Then:
+
+```bash
+npm start          # run the app
+npm run make       # package it (out/make/)
+```
+
+| Path | Process | What it is |
+| --- | --- | --- |
+| `src/main.js` | main | Creates the window and answers two IPC calls: `app:info` and `files:list` |
+| `src/preload.js` | preload | Exposes only those two functions to the page, as `window.api.*` |
+| `src/index.html` | renderer | Content-Security-Policy, import map, jops-core script (`data-app="App.js"`) |
+| `src/App.js`, `src/layout/main.html` | renderer | Root view: a sidebar and `<Router jops screens>` |
+| `src/HomeView.js`, `src/FilesView.js` | renderer | Two screens that call `window.api` |
+| `src/lib/jops-core.min.js` | renderer | The JOPS library, vendored |
+
+`init` refuses to run in a folder that already has an Electron project (`forge.config.*`, `src/index.html`, `src/App.js`, or a `"main"` file) and changes nothing there; use the setup below instead.
+
+### Adding JOPS to an existing Electron project
+
+```bash
+npm i -D jops-core
+npx jops-core init
+```
+
+`init` recognises an Electron project by `electron` in `package.json`; pick template 1, 2 or 5. It works with Electron Forge's default template (`npx create-electron-app@latest my-app`) and other projects that load a plain HTML page; Forge's **vite** and **webpack** templates build the page with a bundler and are not supported. What `init` configures:
+
+- The **web folder** is the folder of the page the main process loads: the folder of `"main"` when it has an `index.html` (`src/` in Forge's template).
+- The library goes to `<web folder>/lib/jops-core.min.js`.
+- Forge's sample page is moved to `index.forge.html` and replaced by a JOPS `index.html` with a Content-Security-Policy, the import map and the module script. A page you already changed is patched instead.
+- Templates 1 and 2 are copied into the web folder next to `index.html` (`App.js`, `layout/`, …), with their paths made page-relative (see below).
+- `jops-core` moves to `devDependencies` and a `jops:update` script is added. No `build` or `postinstall` script: Electron Forge packages the web folder itself.
+
+After upgrading jops-core, copy the new library into the app:
+
+```bash
+npm i -D jops-core@latest
+npm run jops:update
+```
+
+### Paths under `file://`
+
+The page is loaded from `file://`, where a leading `/` means the root of the disk. Every path JOPS resolves (`data-app`, `src=`, `layout=`, `loadLayout()`, `setStyle()`) is written **relative to the page, without a leading `./` or `/`**:
+
+```html
+<script type="module" src="lib/jops-core.min.js" data-app="App.js"></script>
+```
+
+```html
+<FilesView jops src="FilesView.js" layout="layout/files_view.html" path="/files"></FilesView>
+```
+
+The import map is read by the browser, not by JOPS, and its value must look like a URL, so it keeps its `./`: `{ "imports": { "jops-core": "./lib/jops-core.min.js" } }`. The same applies to `<img src>` and other URLs in your markup: `assets/logo.svg`, not `/assets/logo.svg`. Packaging changes nothing: the files are read from inside `app.asar` with the same relative paths.
+
+### Calling the main process (IPC)
+
+JOPS adds no IPC layer: Electron's preload script and `contextBridge` are the bridge, and views call the functions it exposes, the same way Cordova plugins are called from `window`.
+
+```js
+// src/main.js
+ipcMain.handle("files:list", async () => { /* … */ return { dir, entries }; });
+
+// src/preload.js
+contextBridge.exposeInMainWorld("api", {
+  listFiles: () => ipcRenderer.invoke("files:list"),
+});
+
+// src/FilesView.js
+async onResume() {
+  if (!window.api) return; // opened in a regular browser
+  const { dir, entries } = await window.api.listFiles();
+  // …
+}
+```
+
+- Expose named functions only, never `ipcRenderer` itself, and validate arguments in the main process.
+- **Events from the main process** (notifications, live data): `webContents.send()` in the main process, and in the preload a function that registers a listener and returns its unsubscribe function:
+
+  ```js
+  // src/preload.js
+  onProgress: (callback) => {
+    const listener = (event, value) => callback(value);
+    ipcRenderer.on("progress", listener);
+    return () => ipcRenderer.removeListener("progress", listener);
+  },
+  ```
+
+  A view subscribes in `onResume()` and unsubscribes in `onPause()` or `destroy()`, or forwards the data into an owned `EventBus` subscription (`EventBus.subscribe(this, …)`), which `destroy()` removes.
+
+### Content-Security-Policy
+
+`init` writes this policy into `index.html`, so Electron shows no security warning:
+
+```html
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:" />
+```
+
+Only the app's own files load. `'unsafe-inline'` is needed for the inline import map and the `on*` attributes that `bindEvents()` wires, `blob:` for `Thread` workers. Remote scripts and `eval` stay blocked. Add hosts as your app needs them, e.g. `connect-src 'self' https://api.example.com` before calling a remote API.
+
+### Conventions
+
+- **Screens mode** (`<Router jops screens>`) suits desktop layouts: each route fills the router area and scrolls on its own, below a fixed sidebar or toolbar.
+- Keep **Electron's secure defaults** (`contextIsolation`, `sandbox`, no `nodeIntegration`); the views need nothing else.
+- `jops-core` is a **devDependency**: the app uses the vendored copy, so the npm package (with its CLI and templates) stays out of `app.asar`.
 
 ---
 
@@ -987,12 +1110,12 @@ t.terminate();
 
 | Command                | Description                                                                |
 | ---------------------- | -------------------------------------------------------------------------- |
-| `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json`. Detects Cordova and Capacitor projects (see [Hybrid Mobile Apps](#hybrid-mobile-apps-cordova-ionic--capacitor)). Template 3 creates a Next.js project instead (see [Next.js Integration](#nextjs-integration)) |
+| `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json`. Detects Cordova and Capacitor projects (see [Hybrid Mobile Apps](#hybrid-mobile-apps-cordova-ionic--capacitor)) and Electron projects (see [Desktop Apps (Electron)](#desktop-apps-electron)). Template 3 creates a Next.js project and template 4 an Electron project instead |
 | `npx jops-core init --wp` | Install the JOPS WordPress plugin: into `plugins/jops/` of a `wp-env` project, otherwise into the plugins folder of the WordPress installation found in this folder or above it (see [WordPress Integration](#wordpress-integration)) |
-| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project); also refreshes an installed JOPS WordPress plugin |
-| `npx jops-core build`  | Generate production-ready `dist/` folder (skipped in Cordova/Capacitor projects) |
+| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project, `src/lib/` in an Electron project); also refreshes an installed JOPS WordPress plugin |
+| `npx jops-core build`  | Generate production-ready `dist/` folder (skipped in Cordova/Capacitor and Electron projects) |
 
-`init` and `update` accept `--cordova`, `--capacitor` or `--web` to override the detected project type, and `--wp-root <path>` to point to a WordPress folder instead of searching for it (implies `--wp`).
+`init` and `update` accept `--cordova`, `--capacitor`, `--electron` or `--web` to override the detected project type, and `--wp-root <path>` to point to a WordPress folder instead of searching for it (implies `--wp`).
 
 After each command the CLI checks npm for a newer jops-core and prints a notice if one is available (at most 1.5 s, silent when offline). `build` also warns if `lib/jops-core.min.js` doesn't match the installed version. Turn the check off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`; it is skipped automatically when `CI` is set.
 
