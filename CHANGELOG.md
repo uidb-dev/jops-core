@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.10 — 2026-11-08
+
+The JOPS website is live: **[jops.ui-db.com](https://jops.ui-db.com)**, with guides for every platform, concepts, the full API reference and examples. The library is identical to 1.1.9.
+
+### Docs
+
+- The npm package's homepage is now https://jops.ui-db.com, and the README links to it at the top.
+- JOPS WordPress plugin: "Visit plugin site" opens the WordPress guide on the website, and the author link points to https://ui-db.com.
+
 ## 1.1.9 — 2026-11-07
 
 Documentation only. The library is identical to 1.1.8.

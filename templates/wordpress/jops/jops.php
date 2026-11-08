@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name:       JOPS
- * Plugin URI:        https://github.com/uidb-dev/jops-core
+ * Plugin URI:        https://jops.ui-db.com/platforms/wordpress/
  * Description:       Embeds a JOPS single-page app in a page with the [jops] shortcode, e.g. in Elementor's Shortcode widget: [jops app="/jops-spa/src/App.js" id="jops-spa-root"]
  * Version:           {{VERSION}}
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            UIDB
- * Author URI:        https://cdn.ui-db.com
+ * Author URI:        https://ui-db.com
  * License:           MIT
  * License URI:       https://opensource.org/licenses/MIT
  * Text Domain:       jops

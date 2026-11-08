@@ -2,6 +2,8 @@
 
 A no-bundler, vanilla-JavaScript SPA framework for developers who think in OOP and native-mobile patterns.
 
+**Documentation: [jops.ui-db.com](https://jops.ui-db.com)**: guides for every platform, concepts, the full API reference and examples.
+
 ## What is JOPS?
 
 JOPS is a lightweight SPA framework built on native ES6 modules. It discards the complexity of modern build toolchains while keeping a structured, class-based architecture inspired by Android's view and lifecycle model.
@@ -58,7 +60,7 @@ The import map lets your app modules use `import { View } from "jops-core"`. The
 
 `App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it; without `data-app`, JOPS loads `./src/App.js`.
 
-Replace `@latest` with a specific version (e.g. `@1.1.8`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.1.10`) to pin. No build step, no npm, no bundler.
 
 By default the app renders into `<body>`. To render it into an element instead (keeping the rest of the page), add `data-root` with the element's id:
 
