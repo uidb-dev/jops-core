@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.11 — 2026-11-10
+
+Django integration: a JOPS SPA can be its own Django app or run inside any Django template through the new `{% jops %}` template tag. The library gets one new, opt-in option (the app's base folder); without it nothing changes.
+
+### New
+
+- `npx jops-core init --django` in a Django project (folder with `manage.py`): adds the `jops` app (the `{% jops %}` template tag and the jops-core library in `jops/static/jops/lib/`) and optionally a JOPS SPA app (1 Empty, 2 Hello World, 3 None; name asked, default `jops_spa`, or `--name <app>`) with its static files, page and URL route. Adds the apps to `INSTALLED_APPS` and the route to `urlpatterns` when `settings.py` / `urls.py` have the standard `startproject` layout, otherwise prints the lines to add. `npx jops-core update` refreshes `jops/`.
+- Without npm: `pip install https://github.com/uidb-dev/jops-core/releases/latest/download/django-jops.tar.gz` installs the same `jops` app (attached to every GitHub release from now on), then add `"jops"` to `INSTALLED_APPS`.
+- `{% jops "my_app/src/App.js" base="my_app/" id="…" class="…" %}` embeds a JOPS SPA in any Django page (hosted mode, one app per page). The root `<div>` carries the request's CSRF token as `data-csrf`; with django-csp the inline scripts get the request's nonce.
+- The app's base folder: `data-base` on the script tag (standalone) or `mount({ app, root, base })` (hosted). With a base, relative paths JOPS loads (`data-app`/`app`, `src=`, `layout=`, `loadLayout()`, `.css` paths in `setStyle()`) resolve against that folder instead of the page, so the app's files can be served from any prefix or domain (Django's `STATIC_URL`, `/assets/`, a CDN). Root-based paths and full URLs are used as written. Without a base, paths resolve as before.
+
+### Docs
+
+- README: new sections "Django Integration" (install with npm or pip, `init --django`, paths, `{% jops %}`, CSRF, CSP, production with `collectstatic` and hashed file names, CDN and CORS) and "The app's base folder"; hosted mode: scope the app's CSS under its root class; CLI table.
+- AI guide: Django section, path rule for apps served from another prefix or domain, `mount()` signature.
+
 ## 1.1.10 — 2026-11-08
 
 The JOPS website is live: **[jops.ui-db.com](https://jops.ui-db.com)**, with guides for every platform, concepts, the full API reference and examples. The library is identical to 1.1.9.

@@ -2,16 +2,22 @@
  * Starts a JOPS app inside a given element instead of `<body>`. Used by hosts
  * that control when and where the app runs, such as `<JopsApp>` in Next.js
  * (jops-core loaded with `data-host`, which exposes `window.JOPS.mount`).
- * @param {{ app: string, root: HTMLElement }} options - `app`: URL of the app's
- *   entry module (default export is the App class); `root`: element the app's
- *   root view renders into.
+ * @param {{ app: string, root: HTMLElement, base?: string }} options - `app`: URL
+ *   of the app's entry module (default export is the App class); `root`: element
+ *   the app's root view renders into; `base` (optional): URL of the app's folder.
+ *   With `base`, every relative path JOPS loads (`app`, `src=`, `layout=`,
+ *   `loadLayout()`) resolves against it instead of the page, so the app's files
+ *   can be served from any prefix or domain (e.g. Django's `STATIC_URL` or a
+ *   CDN). Root-based paths (`/…`) and full URLs are used as written.
  * @returns {Promise<object>} The App instance.
  * @example
  * await mount({ app: "/quotes/App.js", root: document.getElementById("quotes") });
+ * await mount({ app: "src/App.js", base: "/static/spa/", root: el });
  */
-export declare function mount({ app, root }: {
+export declare function mount({ app, root, base }: {
     app: string;
     root: HTMLElement;
+    base?: string;
 }): Promise<object>;
 /**
  * Ends the hosted app completely, like closing a standalone app: destroys the

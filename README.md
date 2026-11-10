@@ -29,6 +29,8 @@ No Webpack. No Babel. No compiler. Just `<script type="module">` and a browser.
 
 **WordPress sites:** a JOPS SPA can run inside a WordPress page (Elementor or the block editor) through the JOPS plugin and its `[jops]` shortcode. See [WordPress Integration](#wordpress-integration).
 
+**Django projects:** a JOPS SPA can be its own Django app, or run inside any Django template through the `{% jops %}` template tag, with Django as its backend. See [Django Integration](#django-integration).
+
 ---
 
 ## JOPS Demos
@@ -60,7 +62,7 @@ The import map lets your app modules use `import { View } from "jops-core"`. The
 
 `App.js` is your entry point — a file you provide that instantiates your root `View` and mounts it to the page. Point `data-app` to wherever you place it; without `data-app`, JOPS loads `./src/App.js`.
 
-Replace `@latest` with a specific version (e.g. `@1.1.10`) to pin. No build step, no npm, no bundler.
+Replace `@latest` with a specific version (e.g. `@1.1.11`) to pin. No build step, no npm, no bundler.
 
 By default the app renders into `<body>`. To render it into an element instead (keeping the rest of the page), add `data-root` with the element's id:
 
@@ -68,6 +70,8 @@ By default the app renders into `<body>`. To render it into an element instead (
 <div id="app"></div>
 <script type="module" src="https://cdn.jsdelivr.net/npm/jops-core@latest/lib/jops-core.min.js" data-app="./src/App.js" data-root="app"></script>
 ```
+
+To serve the app's files from somewhere other than the page's folder (a static-files prefix or another domain), add `data-base` with the app's folder; see [The app's base folder](#the-apps-base-folder).
 
 > **Note:** ES modules require an HTTP server — open your project with `npx serve` (or any static server) rather than double-clicking `index.html`. Browsers block `import` on `file://` URLs. (Electron is the exception: see [Paths under `file://`](#paths-under-file).)
 
@@ -611,9 +615,140 @@ A complete JOPS app with its own `index.html` (as created by `npx jops-core init
 
 ---
 
+## Django Integration
+
+A JOPS SPA can run in a Django project, served by Django like any other static files. Django stays the backend: the SPA has no models and fetches its data from the project's own views and APIs.
+
+| | SPA app | Embedded in a page |
+| --- | --- | --- |
+| What it is | A Django app holding a complete JOPS SPA, with its own page at `/<app>/` | The SPA renders inside any Django template, next to the site's header, menu and content |
+| How | `npx jops-core init --django` creates it, or set it up by hand | The `{% jops %}` template tag |
+
+Both need the **`jops` app**: the `{% jops %}` template tag and the jops-core library (`static/jops/lib/jops-core.min.js`). Tested with Django 4.2 (Python 3.9) and 6.1 (Python 3.14).
+
+### Install the jops app
+
+| Your project | Install |
+| --- | --- |
+| **With npm** | `npm i jops-core`, then `npx jops-core init --django` in the folder with `manage.py` (see below) |
+| **Without npm** | `pip install https://github.com/uidb-dev/jops-core/releases/latest/download/django-jops.tar.gz`, then add `"jops"` to `INSTALLED_APPS`, and set up a SPA app by hand (see [Paths](#paths-the-spas-folder-is-its-base)) or embed one with `{% jops %}` |
+
+- **Both ways install the same `jops` app**: with npm it is written into the project (`jops/`), with pip it is installed with your other Python packages and `collectstatic` picks up its library as usual.
+- **Updating:** with npm, `npm i jops-core@latest` and then `npx jops-core update`, which refreshes `jops/`. With pip, `pip install --force-reinstall <the same URL>` (the `latest` URL does not change, so pip does not see a new version by itself). To pin a version, use `https://github.com/uidb-dev/jops-core/releases/download/v<version>/django-jops.tar.gz`, also in `requirements.txt`.
+- Use one of the two in a project: a `jops/` folder in the project takes precedence over the pip package.
+
+### Quick start: `init --django`
+
+```bash
+npm i jops-core
+npx jops-core init --django
+```
+
+`init` adds the `jops` app in every case and asks whether to create a SPA app:
+
+| Choice | What it creates |
+| --- | --- |
+| 1 | Empty JOPS SPA app: the basic skeleton |
+| 2 | Hello World JOPS SPA app: an example app using every feature |
+| 3 | None: only the `jops` app (`{% jops %}` and the library) |
+
+For 1 and 2 it asks for the app's name (`jops_spa` by default, or `--name <app>`), then:
+
+- creates the app: `<app>/static/<app>/` (the SPA's files), `<app>/templates/<app>/index.html` (its page) and `<app>/urls.py` (one route);
+- adds `"jops"` and `"<app>"` to `INSTALLED_APPS` and `path("<app>/", include("<app>.urls"))` to the project's `urlpatterns`. When `settings.py` or `urls.py` don't have the standard `startproject` layout (a settings package, a tuple), it changes nothing there and prints the lines to add.
+
+```bash
+python manage.py runserver   # then open http://127.0.0.1:8000/jops_spa/
+```
+
+```text
+jops/                          the jops app ({% jops %} + library)
+  static/jops/lib/jops-core.min.js
+  templatetags/jops.py
+jops_spa/                      the SPA app
+  static/jops_spa/
+    src/App.js                 entry module
+    src/layout/…  src/css/…    layouts and styles
+    assets/…
+  templates/jops_spa/index.html
+  urls.py
+```
+
+`init` stops without changing anything when the name is taken, when `jops/` exists and is not the JOPS app, or when there is no `manage.py`. Run it again to add another SPA app; the existing `jops/` is kept.
+
+### Paths: the SPA's folder is its base
+
+The SPA's page sets the folder once with `data-base`, so every path inside the JOPS files is **relative to the SPA's folder**, the same under `/static/`, another `STATIC_URL`, a CDN or hashed file names:
+
+```django
+{% load static %}
+<script type="importmap" nonce="{{ request.csp_nonce }}">
+  { "imports": { "jops-core": "{% static 'jops/lib/jops-core.min.js' %}" } }
+</script>
+<script type="module" src="{% static 'jops/lib/jops-core.min.js' %}"
+        data-app="{% static 'jops_spa/src/App.js' %}"
+        data-base="{% get_static_prefix %}jops_spa/"></script>
+```
+
+```js
+// jops_spa/static/jops_spa/src/App.js
+mainContainer.loadLayout("src/layout/mainlayout.html");   // not "/static/jops_spa/src/..."
+```
+
+- In layouts the same: `src="src/Features.js"`, `layout="src/layout/header.html"`.
+- Use `{% get_static_prefix %}` for `data-base`, not `{% static %}`: with hashed file names (`ManifestStaticFilesStorage`, WhiteNoise) `{% static %}` only accepts files.
+- **Images** in layouts or built in code are loaded by the browser, not JOPS: build their URLs from the module (`new URL("../assets/logo.svg", import.meta.url).href`) or reference them from the stylesheet.
+- `nonce="{{ request.csp_nonce }}"` lets the inline import map run under a [django-csp](https://django-csp.readthedocs.io/) nonce policy; without django-csp it renders empty.
+- More in [The app's base folder](#the-apps-base-folder).
+
+**Setting it up by hand**, in an existing app or a new one (`python manage.py startapp`): put the SPA's files under the app's `static/<app>/` (in an existing app one level deeper, e.g. `static/<app>/spa/`, so they don't mix with its own files), a page like the one above under `templates/<app>/`, and one route to it, e.g. `path("spa/", TemplateView.as_view(template_name="<app>/spa.html"))`. The app must be in `INSTALLED_APPS`.
+
+### Embed a SPA in any Django page: `{% jops %}`
+
+```django
+{% extends "base.html" %}
+{% load static jops %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static 'jops_spa/src/css/spa.css' %}">
+{% endblock %}
+
+{% block content %}
+  {% jops "jops_spa/src/App.js" base="jops_spa/" id="spa-root" class="spa" %}
+{% endblock %}
+```
+
+| Argument | Description |
+| --- | --- |
+| `app` (first) | **Required.** The entry module: a static path (resolved with `{% static %}`), or a root-based path or URL used as is |
+| `base` | The SPA's folder as a static path (`"jops_spa/"`), joined to `STATIC_URL`. Paths inside the JOPS files are relative to it |
+| `id` | `id` of the app's root `<div>` (default `jops-root`) |
+| `class` | `class` of the root `<div>`; use it to scope the app's CSS |
+| `lib` | URL of `jops-core.min.js` (default: the `jops` app's copy). Use one URL per page, or the browser loads two jops-core instances |
+
+- The tag outputs the import map, the library in hosted mode, the root `<div>` and a small script that mounts the app (see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode)).
+- **CSS:** `setStyle()` has no effect on an embedded app, so link the app's stylesheet in the page. It applies to the whole page: scope every rule under the root class (`.spa .card { … }`, variables on `.spa` instead of `:root`) and avoid `body`, `*` and bare tag selectors. A standalone stylesheet (like the Hello World one) needs a scoped copy for embedding.
+- **One JOPS app per page.** A second `{% jops %}` logs a warning and is not started.
+- **CSRF:** the root `<div>` carries the request's CSRF token as `data-csrf`. Send it with requests that change data:
+
+  ```js
+  const token = document.getElementById("spa-root").dataset.csrf;
+  await fetch("/api/orders/", { method: "POST", headers: { "X-CSRFToken": token, "Content-Type": "application/json" }, body: JSON.stringify(order) });
+  ```
+- **CSP:** with django-csp, the inline scripts get the request's nonce (`script-src` with `NONCE`).
+
+### Conventions
+
+- **Routing:** Django owns the path (`/jops_spa/`), JOPS owns the hash (`/jops_spa/#details?id=7`), so one URL route per SPA is enough. Leaving the page is a full page load, which ends the app.
+- **Backend:** call your own views and APIs with `fetch()`. Requests are same-origin, so the session cookie is sent; writes need the CSRF token (above).
+- **Production:** `collectstatic` collects the `jops` app's library and the SPA's files like any other static files (WhiteNoise, Nginx, S3). Hashed file names work: Django hashes the files the page names (library, `App.js`), JOPS loads the others by their plain names, which `collectstatic` also keeps. Import the library only as `"jops-core"` (the import map), never by its URL, or hashed names give the page a second instance.
+- **CDN `STATIC_URL`:** the static host must send CORS headers (`Access-Control-Allow-Origin`), because the browser loads the library and the SPA's modules from another domain.
+
+---
+
 ## Embedding JOPS in Other Pages (Hosted Mode)
 
-A JOPS app can run inside any page that is not a React component: a plain HTML page, or a page rendered by another server framework (PHP, ASP.NET, Rails, Django, …). This is the mechanism `JopsApp` uses in Next.js and the JOPS plugin uses in WordPress; **inside a Next.js page, use `JopsApp`** instead (see [Next.js Integration](#nextjs-integration)), and on a WordPress site the `[jops]` shortcode (see [WordPress Integration](#wordpress-integration)).
+A JOPS app can run inside any page that is not a React component: a plain HTML page, or a page rendered by another server framework (PHP, ASP.NET, Rails, Django, …). This is the mechanism `JopsApp` uses in Next.js, the JOPS plugin uses in WordPress and the `{% jops %}` tag uses in Django; **inside a Next.js page, use `JopsApp`** instead (see [Next.js Integration](#nextjs-integration)), on a WordPress site the `[jops]` shortcode (see [WordPress Integration](#wordpress-integration)), and in Django the `{% jops %}` tag (see [Django Integration](#django-integration)).
 
 Load the library with `data-host` and no `data-app`: nothing starts automatically, and `window.JOPS` exposes `mount()` and `unmount()` (a `jops:ready` event fires once jops-core has fully loaded, so a listener may call `mount()` directly). The import map and the script `src` must be the same URL, so the page has a single jops-core instance.
 
@@ -632,13 +767,35 @@ Load the library with `data-host` and no `data-app`: nothing starts automaticall
 
 | Function | Description |
 | --- | --- |
-| `mount({ app, root })` | Imports `app` and creates its default export; the root view renders into `root` (an `HTMLElement`) instead of `<body>`. Returns a promise of the App instance |
+| `mount({ app, root, base? })` | Imports `app` and creates its default export; the root view renders into `root` (an `HTMLElement`) instead of `<body>`. Optional `base`: the app's folder (see [The app's base folder](#the-apps-base-folder)). Returns a promise of the App instance |
 | `unmount()` | Ends the app completely: destroys the Router and every view, empties `root`, clears `Store` and `EventBus`, and restores the history methods JOPS wrapped. Safe to call more than once; `mount()` can start an app again afterwards |
 
 - **Paths depend on where the library comes from.** With the library from the CDN (as above), JOPS resolves paths relative to the **hosting page**: `./my-app/App.js` on `example.com/admin/users` means `example.com/admin/my-app/App.js`, and root-absolute `/my-app/...` paths are turned page-relative too. With a vendored library on the same origin (`/lib/jops-core.min.js` in both the import map and `src`), write root-absolute paths (`/my-app/App.js`, `src="/my-app/Users.js"`), which work on every page.
 - **Ending the app:** a full page load ends it anyway. A host that removes the app's element without a page load, or navigates with `history.pushState()`, calls `unmount()`; when history moves to another path the Router also ends the app by itself.
 - `mount` and `unmount` are also exported by the module (`import { mount, unmount } from "jops-core"`) for modules running on the same page.
 - In hosted mode `setStyle()` has no effect (the host page provides the CSS) and the Android back button integration is off.
+- **Scope the app's CSS.** The host page loads the app's stylesheet, and CSS applies to the whole page: rules for `*`, `body`, `html` or `:root` and generic class names (`.header`, `.card`, `.btn`) restyle the host page too. Put every rule under a class on the app's root element (`.my-app .card { … }`, CSS variables on `.my-app` instead of `:root`).
+
+### The app's base folder
+
+By default JOPS resolves the paths it loads (`app` / `data-app`, `src=`, `layout=`, `loadLayout()`, `.css` paths in `setStyle()`) against the page, with the rules described above. When the app's files are served from a different place than the page — a static-files prefix chosen by the server framework (Django's `STATIC_URL`, `/assets/`) or another domain such as a CDN bucket — set the app's folder once:
+
+```html
+<!-- standalone -->
+<script type="module" src="https://static.example.com/my-app/lib/jops-core.min.js"
+        data-app="src/App.js" data-base="https://static.example.com/my-app/"></script>
+```
+
+```js
+// hosted mode
+window.JOPS.mount({ app: "src/App.js", base: "https://static.example.com/my-app/", root });
+```
+
+- With a base, **relative paths** (`src/App.js`, `./src/layout/main.html`) resolve against the base folder, on every page and from any prefix or domain. Root-based paths (`/x`) and full URLs are used as written.
+- Without a base nothing changes, so existing apps are not affected.
+- Images and links written in layouts or built in code are resolved by the browser, not by JOPS: build them from the module, e.g. `new URL("../assets/logo.svg", import.meta.url).href`, or reference them from the stylesheet (`url()` resolves against the CSS file).
+- **Another domain needs CORS:** module scripts and layout requests from another origin load only if that server sends `Access-Control-Allow-Origin` (e.g. the S3/CloudFront CORS setting). Without it the browser blocks the library.
+- Import the library only by its bare name (`import { View } from "jops-core"`), never by its URL, so the import map gives every module the same instance (servers that add a hash to file names change that URL).
 
 ---
 
@@ -703,7 +860,7 @@ Optional hooks, called by the Router:
 | `find(id)`                      | Returns an array of `Element` wrappers for every element with the given `id` across the layout (sub-views' DOM included), in page order |
 | `find(condition)`               | Depth-first search across full subview subtree; returns flat array of all views matching the predicate         |
 | `props`                         | The view's read-only [input props](#tag-props-input-properties)                                                 |
-| `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped. No effect in hosted mode (Next.js, WordPress, `mount()`): the host page owns the CSS |
+| `setStyle(style)`               | Injects a `.css` file link or inline style tag into `<head>`, deduped. No effect in hosted mode (Next.js, WordPress, Django `{% jops %}`, `mount()`): the host page owns the CSS |
 | `addSubView(containerId, view)` | Appends `view` into the element with `id="containerId"` (looked up like `get()`: in any top-level element of the layout, or a top-level element itself), runs its full lifecycle |
 | `insertSubView(view, index)`    | Inserts `view` at position `index` among the children of `this.domNode` (the first top-level element), runs its full lifecycle |
 | `removeSubView(view)`           | Removes `view` from DOM and `this.subViews`, calls `view.destroy()`                                            |
@@ -1064,12 +1221,13 @@ Prefer the owned form inside views. A global subscription made by a view keeps t
 
 ### `mount()` / `unmount()` — Functions
 
-Start and end an app in a host page (hosted mode). Used by `JopsApp` in Next.js and by the JOPS WordPress plugin; see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode). The page must load jops-core with `data-host` (otherwise it starts `data-app` / `./src/App.js` by itself); `window.JOPS.mount` / `window.JOPS.unmount` are the same functions.
+Start and end an app in a host page (hosted mode). Used by `JopsApp` in Next.js, by the JOPS WordPress plugin and by the `{% jops %}` Django tag; see [Embedding JOPS in Other Pages](#embedding-jops-in-other-pages-hosted-mode). The page must load jops-core with `data-host` (otherwise it starts `data-app` / `./src/App.js` by itself); `window.JOPS.mount` / `window.JOPS.unmount` are the same functions.
 
 ```js
 import { mount, unmount } from "jops-core";
 
 await mount({ app: "/my-app/App.js", root: document.getElementById("app") });
+await mount({ app: "src/App.js", base: "/static/my-app/", root }); // paths relative to the app's folder
 unmount(); // destroys the Router and all views, empties the root, clears Store and EventBus
 ```
 
@@ -1117,10 +1275,11 @@ t.terminate();
 | ---------------------- | -------------------------------------------------------------------------- |
 | `npx jops-core init`   | Vendor library, configure `index.html`, inject scripts into `package.json`. Detects Cordova and Capacitor projects (see [Hybrid Mobile Apps](#hybrid-mobile-apps-cordova-ionic--capacitor)) and Electron projects (see [Desktop Apps (Electron)](#desktop-apps-electron)). Template 3 creates a Next.js project and template 4 an Electron project instead |
 | `npx jops-core init --wp` | Install the JOPS WordPress plugin: into `plugins/jops/` of a `wp-env` project, otherwise into the plugins folder of the WordPress installation found in this folder or above it (see [WordPress Integration](#wordpress-integration)) |
-| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project, `src/lib/` in an Electron project); also refreshes an installed JOPS WordPress plugin |
+| `npx jops-core init --django` | In a Django project (folder with `manage.py`): add the `jops` app (`{% jops %}` and the library) and optionally a JOPS SPA app, and register them in `settings.py` / `urls.py` (see [Django Integration](#django-integration)) |
+| `npx jops-core update` | Copy the latest `jops-core.min.js` from `node_modules` to `lib/` (`public/lib/` in a Next.js project, `src/lib/` in an Electron project); also refreshes an installed JOPS WordPress plugin, and the `jops` app in a Django project |
 | `npx jops-core build`  | Generate production-ready `dist/` folder (skipped in Cordova/Capacitor and Electron projects) |
 
-`init` and `update` accept `--cordova`, `--capacitor`, `--electron` or `--web` to override the detected project type, and `--wp-root <path>` to point to a WordPress folder instead of searching for it (implies `--wp`).
+`init` and `update` accept `--cordova`, `--capacitor`, `--electron` or `--web` to override the detected project type, and `--wp-root <path>` to point to a WordPress folder instead of searching for it (implies `--wp`). `init --django` accepts `--name <app>` for the SPA app's name.
 
 After each command the CLI checks npm for a newer jops-core and prints a notice if one is available (at most 1.5 s, silent when offline). `build` also warns if `lib/jops-core.min.js` doesn't match the installed version. Turn the check off with `--no-update-check` or `JOPS_NO_UPDATE_CHECK=1`; it is skipped automatically when `CI` is set.
 

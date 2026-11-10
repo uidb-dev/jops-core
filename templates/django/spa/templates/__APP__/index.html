@@ -1,0 +1,20 @@
+{% load static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{APP}}</title>
+    <!-- nonce: for a django-csp nonce policy (empty without django-csp). -->
+    <script type="importmap" nonce="{{ request.csp_nonce }}">
+      { "imports": { "jops-core": "{% static 'jops/lib/jops-core.min.js' %}" } }
+    </script>
+    <!-- data-base: the SPA's folder; paths inside the JOPS files are relative to it. -->
+    <script
+      type="module"
+      src="{% static 'jops/lib/jops-core.min.js' %}"
+      data-app="{% static '{{APP}}/src/App.js' %}"
+      data-base="{% get_static_prefix %}{{APP}}/"
+    ></script>
+  </head>
+  <body></body>
+</html>
